@@ -5,8 +5,8 @@ import "@/app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DashUI",
-  description: "Dashboard UI built with Next.js and TailwindCSS",
+  title: "OZPay",
+  description: "OzPay - Aplikasi Pembayaran Tagihan + Monitoring Network",
 };
 
 export default function RootLayout({

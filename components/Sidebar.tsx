@@ -54,6 +54,12 @@ const menu: MenuItem[] = [
         name: "Transaksi", icon: Wallet, children: [
             { name: "Bayar Tagihan", icon: CreditCardIcon, path: "/transaksi/bayar-tagihan" }
         ]
+    },
+    {
+        name: "Monitoring", icon: ServerIcon, children: [
+            // { name: "Client", icon: User, path: "/monitoring/client" },
+            { name: "Servers", icon: ServerIcon, path: "/monitoring/servers" }
+        ]
     }
 ];
 
@@ -63,11 +69,13 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
     const [openSettings, setOpenSettings] = useState(false);
     const [openPembayaran, setOpenPembayaran] = useState(false);
     const [openTransaksi, setOpenTransaksi] = useState(false);
+    const [openMonitoring, setOpenMonitoring] = useState(false);  // New state for monitoring
 
     useEffect(() => {
         if (pathname.startsWith("/settings")) setOpenSettings(true);
         if (pathname.startsWith("/pembayaran")) setOpenPembayaran(true);
         if (pathname.startsWith("/transaksi")) setOpenTransaksi(true); // ✅ tambahkan ini
+        if (pathname.startsWith("/monitoring")) setOpenMonitoring(true); // Add monitoring path check
     }, [pathname]);
 
     return (
@@ -83,19 +91,23 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
                 </button>
             </div>
 
-            <nav className="flex-1 overflow-y-auto space-y-1 px-2 text-sm">
+            <nav className="flex-1 overflow-y-auto max-h-screen space-y-1 px-2 text-sm scroll-smooth 
+                scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
                 {menu.map((item) => {
                     const isDropdown = !!item.children;
                     const isParentSettings = item.name === "Settings";
                     const isParentPembayaran = item.name === "Pembayaran";
                     const isParentTransaksi = item.name === "Transaksi";
+                    const isParentMonitoring = item.name === "Monitoring"; // New check for monitoring
                     const isOpenDropdown = isParentSettings
                         ? openSettings
                         : isParentPembayaran
                             ? openPembayaran
                             : isParentTransaksi
                                 ? openTransaksi
-                                : false;
+                                : isParentMonitoring
+                                    ? openMonitoring
+                                    : false;
 
                     const setOpen = isParentSettings
                         ? setOpenSettings
@@ -103,7 +115,9 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
                             ? setOpenPembayaran
                             : isParentTransaksi
                                 ? setOpenTransaksi
-                                : () => { };
+                                : isParentMonitoring
+                                    ? setOpenMonitoring
+                                    : () => { };
 
                     if (isDropdown && item.children) {
                         const isParentActive = item.children?.some((child) => pathname.startsWith(child.path || ""));

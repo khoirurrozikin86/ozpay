@@ -17,7 +17,7 @@ export default function DashboardLayout({
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="flex-1 flex flex-col bg-gray-100">
                 <Navbar onHamburgerClick={() => setSidebarOpen(true)} />
-                <main className="flex-1 overflow-auto p-6">{children}</main>
+                <main className="flex-1 overflow-auto p-3">{children}</main>
                 <BottomNavbar /> {/* tampil hanya di layar kecil */}
             </div>
         </div>

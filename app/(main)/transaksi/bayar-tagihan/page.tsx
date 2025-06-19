@@ -116,11 +116,11 @@ export default function BayarTagihanPage() {
                                 }`}
                         >
                             <div className="space-y-1">
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">No Tagihan:</strong>
                                     <span className="w-2/3">{tagihan.no_tagihan}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Lokasi Server:</strong>
                                     {/* Badge for Location */}
                                     <span className="w-2/3">
@@ -129,28 +129,28 @@ export default function BayarTagihanPage() {
                                         </span>
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">ID :</strong>
                                     <span className="w-2/3">{tagihan.id_pelanggan}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Nama:</strong>
                                     <span className="w-2/3">{tagihan.pelanggan?.nama || "-"}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Bulan:</strong>
                                     <span className="w-2/3">{tagihan.id_bulan}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Tahun:</strong>
                                     <span className="w-2/3">{tagihan.tahun}</span>
                                 </div>
 
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Jumlah:</strong>
                                     <span className="w-2/3">Rp {Number(tagihan.jumlah_tagihan).toLocaleString("id-ID")}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-green-300">
+                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
                                     <strong className="w-1/3">Nama Paket:</strong>
                                     <span className="w-2/3">{tagihan.pelanggan?.paket?.nama || "-"}</span>
                                 </div>

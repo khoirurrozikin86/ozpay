@@ -132,14 +132,16 @@ export default function PaketPage() {
                     />
                 </div>
 
+                {loading && (
+                    <div className="text-center p-12">
+                        <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
+                        <p className="mt-2 text-xl text-gray-600">Memuat data...</p>
+                    </div>
+                )}
+
                 {/* Paket Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {loading && (
-                        <div className="text-center p-12">
-                            <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
-                            <p className="mt-2 text-xl text-gray-600">Memuat data...</p>
-                        </div>
-                    )}
+
 
                     {paginatedPakets.map((p: any) => (
                         <div
@@ -190,39 +192,38 @@ export default function PaketPage() {
                         ))}
                     </div>
                 )}
-
                 {/* Modal Form */}
                 {showFormModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                        <div className="bg-white rounded-lg p-6 w-full max-w-xl space-y-4 transform transition-all duration-300 scale-95 opacity-0 animate-fadeIn">
-                            <h2 className="text-lg font-semibold">{editId ? "Edit Paket" : "Tambah Paket"}</h2>
-                            <div className="space-y-4">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-xl space-y-6 transform transition-all duration-300 scale-95 opacity-0 animate-fadeIn sm:max-w-md md:max-w-lg lg:max-w-xl">
+                            <h2 className="text-2xl font-semibold text-center text-gray-800">{editId ? "Edit Paket" : "Tambah Paket"}</h2>
+                            <div className="space-y-6">
                                 {Object.entries(form).map(([field, value]) => (
                                     <div key={field} className="flex flex-col">
-                                        <label className="text-sm text-gray-700 capitalize mb-1">{field.replace("_", " ")}</label>
+                                        <label className="text-sm text-gray-700 capitalize mb-2">{field.replace("_", " ")}</label>
                                         <input
                                             type={["harga", "durasi"].includes(field) ? "number" : "text"}
                                             value={value}
                                             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
                                             placeholder={field}
-                                            className="border p-3 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="border border-gray-300 p-3 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                         />
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex justify-end gap-4">
+                            <div className="flex justify-between gap-4">
                                 <button
                                     onClick={() => {
                                         resetForm();
                                         setShowFormModal(false);
                                     }}
-                                    className="px-6 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                                    className="px-6 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-700 transition-all"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     onClick={handleSubmit}
-                                    className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                    className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all"
                                 >
                                     {editId ? "Update" : "Tambah"}
                                 </button>
@@ -230,6 +231,7 @@ export default function PaketPage() {
                         </div>
                     </div>
                 )}
+
 
                 {/* Modal Hapus */}
                 {showDeleteModal && (

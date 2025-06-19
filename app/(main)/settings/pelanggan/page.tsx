@@ -171,6 +171,31 @@ export default function PelangganPage() {
     };
 
 
+    const handleDeletePelanggan = async () => {
+        if (!pelangganToDelete) {
+            Swal.fire("Error", "Pelanggan tidak ditemukan.", "error");
+            return;
+        }
+
+        try {
+            setLoading(prev => ({ ...prev, delete: true })); // Show loading during delete
+            // Call delete API function
+            await deletePelanggan(pelangganToDelete.id);
+            Swal.fire("Sukses", `Pelanggan ${pelangganToDelete.nama} berhasil dihapus.`, "success");
+            setShowDeleteModal(false); // Close modal after delete
+            load(); // Reload data after deletion
+        } catch (error: any) {
+            // Check if error has a message
+            const errorMessage = error?.response?.data?.message || error?.message || "Terjadi kesalahan. Silakan coba lagi.";
+            Swal.fire("Gagal", errorMessage, "error"); // Show detailed error message
+        } finally {
+            setLoading(prev => ({ ...prev, delete: false })); // Hide loading after delete
+        }
+    };
+
+
+
+
     const filteredData = pelanggans.filter((p: any) =>
         p.nama.toLowerCase().includes(search.toLowerCase()) ||
         p.id_pelanggan.includes(search)
@@ -263,8 +288,9 @@ export default function PelangganPage() {
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Cari nama atau ID pelanggan..."
+                    placeholder="Search"
                     className="w-full sm:w-64 px-4 py-3 border border-gray-300 bg-white rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ease-in-out duration-300"
+
                 />
             </div>
 
@@ -275,7 +301,7 @@ export default function PelangganPage() {
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 {['ID', 'Nama', 'No HP', 'Email', 'Paket', 'Server', 'IP Router', 'Aksi'].map((header) => (
-                                    <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
+                                    <th key={header} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -292,29 +318,39 @@ export default function PelangganPage() {
                                 paginated.map((p: any) => (
                                     <tr key={p.id} className="hover:bg-gray-50 transition-all ease-in-out duration-300">
                                         {['id_pelanggan', 'nama', 'no_hp', 'email'].map((key) => (
-                                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p[key]}</td>
+                                            <td key={key} className="px-4 py-3 text-sm text-gray-900">{p[key]}</td>
                                         ))}
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-4 py-3 text-sm text-gray-500">
                                             {pakets.find((paket) => paket.id === p.id_paket)?.nama || '-'}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-4 py-3 text-sm text-gray-500">
                                             {servers.find((server) => server.id === p.id_server)?.lokasi || '-'}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.ip_router || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-4 py-3 text-sm text-gray-500">{p.ip_router || '-'}</td>
+                                        <td className="px-4 py-3 text-right text-sm font-medium">
+                                            {/* Action Links */}
                                             <div className="flex justify-end space-x-2">
-                                                <button
-                                                    onClick={() => handleEdit(p)}
-                                                    className="text-blue-600 hover:text-blue-900 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all ease-in-out duration-300"
+                                                <a
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault(); // Prevent default link behavior
+                                                        handleEdit(p); // Call the edit function
+                                                    }}
+                                                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
                                                 >
                                                     Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => { setPelangganToDelete(p); setShowDeleteModal(true); }}
-                                                    className="text-red-600 hover:text-red-900 px-4 py-2 rounded-lg hover:bg-red-50 transition-all ease-in-out duration-300"
+                                                </a>
+                                                <a
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault(); // Prevent default link behavior
+                                                        setPelangganToDelete(p);
+                                                        setShowDeleteModal(true); // Open delete modal
+                                                    }}
+                                                    className="text-red-600 hover:text-red-900 text-sm font-medium"
                                                 >
                                                     Hapus
-                                                </button>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -322,6 +358,10 @@ export default function PelangganPage() {
                             )}
                         </tbody>
                     </table>
+
+
+
+
                 </div>
             </div>
 
@@ -353,7 +393,7 @@ export default function PelangganPage() {
                                 Edit
                             </button>
                             <button
-                                onClick={() => { setPelangganToDelete(p); setShowDeleteModal(true); }}
+                                onClick={handleDeletePelanggan}
                                 className="text-red-600 hover:text-red-900 px-4 py-2 rounded-lg hover:bg-red-50 transition-all ease-in-out duration-300"
                             >
                                 Hapus
@@ -413,59 +453,76 @@ export default function PelangganPage() {
                 </div>
             )}
 
+
+            {/* Form Modal */}
             {/* Form Modal */}
             {showFormModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl space-y-4 animate-fadeIn max-h-[90vh] overflow-y-auto scrollbar-hide">
-                        <h2 className="text-xl font-semibold text-gray-800">{editId ? "Edit Pelanggan" : "Tambah Pelanggan"}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {Object.entries(form).map(([key, value]) => (
-                                <div key={key} className="flex flex-col">
-                                    <label className="mb-1 text-sm font-medium text-gray-700 capitalize">{key.replace('_', ' ')}</label>
-                                    {key === 'id_paket' ? (
-                                        <select
-                                            value={value}
-                                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                                            className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="">Pilih Paket</option>
-                                            {pakets.map((p: any) => (
-                                                <option key={p.id} value={p.id}>{p.nama}</option>
-                                            ))}
-                                        </select>
-                                    ) : key === 'id_server' ? (
-                                        <select
-                                            value={value}
-                                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                                            className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="">Pilih Server</option>
-                                            {servers.map((s: any) => (
-                                                <option key={s.id} value={s.id}>{s.lokasi}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <input
-                                            type={key === 'password' ? 'password' : 'text'}
-                                            value={value}
-                                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                                            className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder={`Masukkan ${key.replace('_', ' ')}`}
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                    <div className="bg-white rounded-lg p-6 w-full max-w-sm sm:max-w-md space-y-4 animate-fadeIn max-h-[80vh] overflow-hidden scrollbar-hide flex flex-col">
+                        <h2 className="text-xl font-semibold text-gray-800 text-center">{editId ? "Edit Pelanggan" : "Tambah Pelanggan"}</h2>
+
+                        {/* Scrollable Content */}
+                        <div className="overflow-y-auto flex-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {Object.entries(form).map(([key, value]) => (
+                                    <div key={key} className="flex flex-col">
+                                        <label className="mb-1 text-sm font-medium text-gray-700 capitalize">{key.replace('_', ' ')}</label>
+
+                                        {key === 'id_pelanggan' ? (
+                                            <input
+                                                type="text"
+                                                value={value}
+                                                readOnly
+                                                className="border border-gray-300 p-2 rounded-md text-sm bg-gray-100 text-gray-500"
+                                                placeholder="ID Pelanggan"
+                                            />
+                                        ) : key === 'id_paket' ? (
+                                            <select
+                                                value={value}
+                                                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                                className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                            >
+                                                <option value="">Pilih Paket</option>
+                                                {pakets.map((p: any) => (
+                                                    <option key={p.id} value={p.id}>{p.nama}</option>
+                                                ))}
+                                            </select>
+                                        ) : key === 'id_server' ? (
+                                            <select
+                                                value={value}
+                                                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                                className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                            >
+                                                <option value="">Pilih Server</option>
+                                                {servers.map((s: any) => (
+                                                    <option key={s.id} value={s.id}>{s.lokasi}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={key === 'password' ? 'password' : 'text'}
+                                                value={value}
+                                                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                                className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder={`Masukkan ${key.replace('_', ' ')}`}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex justify-end gap-2 pt-4">
+
+                        {/* Footer with Buttons */}
+                        <div className="flex justify-between gap-2 pt-4 mt-4 border-t border-gray-200 pt-4">
                             <button
                                 onClick={() => { resetForm(); setShowFormModal(false); }}
-                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm"
+                                className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm w-full sm:w-auto"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-sm"
+                                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-sm w-full sm:w-auto"
                             >
                                 {editId ? "Update" : "Simpan"}
                             </button>
@@ -473,6 +530,8 @@ export default function PelangganPage() {
                     </div>
                 </div>
             )}
+
+
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
