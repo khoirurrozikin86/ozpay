@@ -222,7 +222,7 @@ export default function ServerPage() {
 
                 {/* Display Router Monitoring Data */}
                 <div className="mt-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">Monitoring Data for Server {selectedServerId}</h2>
+                    <span className="text-xl font-bold text-gray-800 mb-4">Monitoring Data for Server : {selectedServerId} - {paginatedServers.find(s => s.id === selectedServerId)?.lokasi}</span>
                     <div className="space-y-4">
                         {loadingMonitoring ? (
                             <div className="text-center p-6">

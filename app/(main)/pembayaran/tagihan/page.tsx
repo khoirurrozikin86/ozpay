@@ -17,7 +17,7 @@ export default function BuatTagihanPage() {
     const itemsPerPage = 10;
     const [pelanggans, setPelanggans] = useState<Pelanggan[]>([]);
 
-    const tahunList = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+    const tahunList = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i);
 
     const bulanList = [
         { id_bulan: "01", bulan: "Januari" },
@@ -50,7 +50,6 @@ export default function BuatTagihanPage() {
             Swal.fire("Gagal", "Pilih bulan dan tahun terlebih dahulu", "warning");
             return;
         }
-
         const confirm = await Swal.fire({
             title: "Buat Tagihan?",
             text: "Tagihan akan dibuat untuk semua pelanggan.",
