@@ -59,13 +59,13 @@ export default function Navbar({ onHamburgerClick }: NavbarProps) {
                         <div className="px-4 py-2 font-semibold text-indigo-700">
                             {user.name}
                         </div>
-                        <Link
+                        {/* <Link
                             href="/profile"
                             className="block px-4 py-2 hover:bg-gray-100 transition"
                             onClick={() => setDropdownOpen(false)}
                         >
                             Manage Profile
-                        </Link>
+                        </Link> */}
                         <button
                             className="w-full text-left px-4 py-2 hover:bg-gray-100 transition"
                             onClick={() => {

@@ -105,128 +105,141 @@ export default function BuatTagihanPage() {
     const uniquePakets = Array.from(new Set(pelanggans.map((p) => p.paket?.nama).filter(Boolean)));
 
     return (
-        <div className="p-4">
-            <div className="w-full bg-white rounded-2xl shadow-md p-6 mb-6">
-                <h1 className="text-xl font-semibold mb-6 text-gray-700 text-center">Buat Tagihan</h1>
+        <div className="p-1">
+            <div className="p-3">
+                <div className="">
+                    <h1 className="text-xl font-semibold mb-6 text-gray-700 text-center">Buat Tagihan</h1>
 
-                <div className="flex flex-col md:flex-row justify-center items-center gap-6">
-                    <div className="w-full max-w-xs">
-                        <label className="text-sm font-medium text-gray-600 block mb-1 text-center">Bulan</label>
-                        <select
-                            value={selectedBulan}
-                            onChange={(e) => setSelectedBulan(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
-                        >
-                            <option value="">-- Pilih Bulan --</option>
-                            {bulanList.map((b: any) => (
-                                <option key={b.id_bulan} value={b.id_bulan}>
-                                    {b.id_bulan} - {b.bulan}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+                        <div className="w-full max-w-xs">
 
-                    <div className="w-full max-w-xs">
-                        <label className="text-sm font-medium text-gray-600 block mb-1 text-center">Tahun</label>
-                        <select
-                            value={selectedTahun}
-                            onChange={(e) => setSelectedTahun(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
-                        >
-                            <option value="">-- Pilih Tahun --</option>
-                            {tahunList.map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="bg-white rounded-xl shadow p-4">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-                    <div className="w-full lg:w-1/2">
-                        <label className="text-sm font-medium text-gray-600 block mb-1">Cari Pelanggan</label>
-                        <input
-                            type="text"
-                            className="w-full border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring focus:border-blue-400"
-                            placeholder="Cari nama atau ID pelanggan"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    <div className="w-full lg:w-1/2">
-                        <label className="text-sm font-medium text-gray-600 block mb-1">Filter Paket</label>
-                        <select
-                            value={filterPaket}
-                            onChange={(e) => setFilterPaket(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
-                        >
-                            <option value="">Semua Paket</option>
-                            {uniquePakets.map((nama, i) => (
-                                <option key={i} value={nama}>{nama}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto bg-white rounded-xl shadow p-4 mt-4">
-                    <h3 className="text-md font-semibold mb-4 text-gray-700">Daftar Pelanggan & Paket</h3>
-
-                    {loadingPelanggan ? (
-                        <div className="text-center py-8 text-gray-500 animate-pulse">Memuat data pelanggan...</div>
-                    ) : (
-                        <table className="min-w-full text-sm border-separate border-spacing-y-2">
-                            <thead>
-                                <tr className="bg-gray-100 text-gray-700">
-                                    <th className="p-2 border border-gray-200 rounded-l-md">No</th>
-                                    <th className="p-2 border border-gray-200">ID Pelanggan</th>
-                                    <th className="p-2 border border-gray-200">Nama</th>
-                                    <th className="p-2 border border-gray-200">Paket</th>
-                                    <th className="p-2 border border-gray-200 rounded-r-md">Tagihan (Rp)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedData.map((p: any, i: number) => (
-                                    <tr key={p.id} className="bg-white shadow rounded text-gray-800">
-                                        <td className="p-2 border border-gray-200">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                                        <td className="p-2 border border-gray-200">{p.id_pelanggan}</td>
-                                        <td className="p-2 border border-gray-200">{p.nama}</td>
-                                        <td className="p-2 border border-gray-200">{p.paket?.nama || "-"}</td>
-                                        <td className="p-2 border border-gray-200">
-                                            Rp {Number(p.paket?.harga || 0).toLocaleString('id-ID')}
-                                        </td>
-                                    </tr>
+                            <select
+                                value={selectedBulan}
+                                onChange={(e) => setSelectedBulan(e.target.value)}
+                                className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
+                            >
+                                <option value="">-- Pilih Bulan --</option>
+                                {bulanList.map((b: any) => (
+                                    <option key={b.id_bulan} value={b.id_bulan}>
+                                        {b.id_bulan} - {b.bulan}
+                                    </option>
                                 ))}
-                            </tbody>
-                        </table>
-                    )}
+                            </select>
+                        </div>
 
-                    <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm">Halaman {currentPage} dari {totalPages}</div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                className="px-3 py-1 border rounded disabled:opacity-50"
-                                disabled={currentPage === 1}
-                            >Sebelumnya</button>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                className="px-3 py-1 border rounded disabled:opacity-50"
-                                disabled={currentPage === totalPages}
-                            >Berikutnya</button>
+                        <div className="w-full max-w-xs">
+                            <select
+                                value={selectedTahun}
+                                onChange={(e) => setSelectedTahun(e.target.value)}
+                                className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
+                            >
+                                <option value="">-- Pilih Tahun --</option>
+                                {tahunList.map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                ))}
+                            </select>
+                        </div>
+
+
+
+
+                    </div>
+
+                </div>
+
+
+                <div className="flex gap-2 justify-center mt-6">
+                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-yellow-400 text-white rounded shadow">
+                        Batal
+                    </button>
+                    <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded shadow">
+                        {loading ? "Memproses..." : "Buat Tagihan"}
+                    </button>
+                </div>
+
+
+
+
+
+                <div className="">
+                    {/* <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+                        <div className="w-full lg:w-1/2">
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Cari Pelanggan</label>
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring focus:border-blue-400"
+                                placeholder="Cari nama atau ID pelanggan"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                        <div className="w-full lg:w-1/2">
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Filter Paket</label>
+                            <select
+                                value={filterPaket}
+                                onChange={(e) => setFilterPaket(e.target.value)}
+                                className="w-full border border-gray-300 p-2 rounded-lg bg-white shadow-sm focus:outline-none focus:ring focus:border-blue-400"
+                            >
+                                <option value="">Semua Paket</option>
+                                {uniquePakets.map((nama, i) => (
+                                    <option key={i} value={nama}>{nama}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div> */}
+
+                    <div className="overflow-x-auto bg-white rounded-xl shadow p-4 mt-4">
+                        <h3 className="text-md font-semibold mb-4 text-gray-700">Daftar Pelanggan & Paket</h3>
+
+                        {loadingPelanggan ? (
+                            <div className="text-center py-8 text-gray-500 animate-pulse">Memuat data pelanggan...</div>
+                        ) : (
+                            <table className="min-w-full text-sm border-separate border-spacing-y-2">
+                                <thead>
+                                    <tr className="bg-gray-100 text-gray-700">
+                                        <th className="p-2 border border-gray-200 rounded-l-md hidden sm:table-cell">No</th>
+                                        <th className="p-2 border border-gray-200 hidden sm:table-cell">ID Pelanggan</th>
+                                        <th className="p-2 border border-gray-200">Nama</th>
+                                        <th className="p-2 border border-gray-200 hidden sm:table-cell">Paket</th>
+                                        <th className="p-2 border border-gray-200 rounded-r-md">Tagihan (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedData.map((p: any, i: number) => (
+                                        <tr key={p.id} className="bg-white shadow rounded text-gray-800">
+                                            <td className="p-2 border border-gray-200 hidden sm:table-cell">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                            <td className="p-2 border border-gray-200 hidden sm:table-cell">{p.id_pelanggan}</td>
+                                            <td className="p-2 border border-gray-200">{p.nama}</td>
+                                            <td className="p-2 border border-gray-200 hidden sm:table-cell">{p.paket?.nama || "-"}</td>
+                                            <td className="p-2 border border-gray-200">
+                                                Rp {Number(p.paket?.harga || 0).toLocaleString('id-ID')}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+
+                        <div className="flex justify-between items-center mt-4">
+                            <div className="text-sm">Halaman {currentPage} dari {totalPages}</div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                    className="px-3 py-1 border rounded disabled:opacity-50"
+                                    disabled={currentPage === 1}
+                                >Sebelumnya</button>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                    className="px-3 py-1 border rounded disabled:opacity-50"
+                                    disabled={currentPage === totalPages}
+                                >Berikutnya</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div className="flex gap-2 justify-end mt-6">
-                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-yellow-400 text-white rounded shadow">
-                    Batal
-                </button>
-                <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded shadow">
-                    {loading ? "Memproses..." : "Buat Tagihan"}
-                </button>
+                </div>
+
+
             </div>
         </div>
     );

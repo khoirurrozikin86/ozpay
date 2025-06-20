@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
 
     // Jika sudah login dan akses login → redirect ke dashboard
     if (token && pathname === "/login") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();

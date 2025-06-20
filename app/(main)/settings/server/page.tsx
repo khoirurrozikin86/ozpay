@@ -104,6 +104,8 @@ export default function ServerPage() {
 
     return (
         <div className="p-4">
+
+
             <div className="space-y-6">
                 {/* Title Section */}
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">Manajemen Server</h1>
@@ -126,14 +128,18 @@ export default function ServerPage() {
                     />
                 </div>
 
+
+
+                {loading && (
+                    <div className="text-center p-12">
+                        <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
+                        <p className="mt-2 text-xl text-gray-600">Memuat data...</p>
+                    </div>
+                )}
+
                 {/* Server Grid Section */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {loading && (
-                        <div className="text-center p-12">
-                            <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
-                            <p className="mt-2 text-xl text-gray-600">Memuat data...</p>
-                        </div>
-                    )}
+
 
                     {paginatedServers.map((s: any) => (
                         <div
@@ -188,6 +194,8 @@ export default function ServerPage() {
                     ))}
                 </div>
 
+
+
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-center gap-2 mt-6">
@@ -206,42 +214,58 @@ export default function ServerPage() {
                 {/* Modal Form */}
                 {showFormModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                        <div className="bg-white rounded-lg p-6 w-full max-w-xl space-y-4 transform transition-all duration-300 scale-95 opacity-0 animate-fadeIn">
-                            <h2 className="text-lg font-semibold">{editId ? "Edit Server" : "Tambah Server"}</h2>
-                            <div className="space-y-4">
-                                {Object.entries(form).map(([field, value]) => (
-                                    <div key={field} className="flex flex-col">
-                                        <label className="text-sm text-gray-700 capitalize mb-1">{field.replace("_", " ")}</label>
-                                        <input
-                                            type={["harga", "durasi"].includes(field) ? "number" : "text"}
-                                            value={value}
-                                            onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                                            placeholder={field}
-                                            className="border p-3 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
-                                ))}
+                        <div className="bg-white rounded-lg p-6 w-full max-w-lg sm:max-w-md space-y-6 animate-fadeIn max-h-[80vh] overflow-hidden scrollbar-hide flex flex-col">
+                            <h2 className="text-2xl font-semibold text-center text-gray-800">{editId ? "Edit Paket" : "Tambah Paket"}</h2>
+
+                            {/* Scrollable Content */}
+                            <div className="overflow-y-auto flex-1">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {Object.entries(form).map(([field, value]) => {
+                                        // Skip the fields `created_at` and `updated_at` when editing
+                                        if (field === "created_at" || field === "updated_at") {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <div key={field} className="flex flex-col">
+                                                <label className="text-sm text-gray-700 capitalize mb-2">{field.replace("_", " ")}</label>
+                                                <input
+                                                    type={["harga", "durasi"].includes(field) ? "number" : "text"}
+                                                    value={value}
+                                                    onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                                                    placeholder={field}
+                                                    className="border border-gray-300 p-3 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                            <div className="flex justify-end gap-4">
+
+                            {/* Footer with Buttons */}
+                            <div className="flex justify-between gap-4 mt-4 border-t border-gray-200 pt-4">
                                 <button
                                     onClick={() => {
                                         resetForm();
                                         setShowFormModal(false);
                                     }}
-                                    className="px-6 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                                    className="px-6 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-700 transition-all w-full sm:w-auto"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     onClick={handleSubmit}
-                                    className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                    className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all w-full sm:w-auto"
                                 >
-                                    {editId ? "Update" : "Tambah"}
+                                    {editId ? "Update" : "Simpan"}
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
+
+
+
 
                 {/* Modal Hapus */}
                 {showDeleteModal && (

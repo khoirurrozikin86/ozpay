@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #242222;
+  --foreground: #000;
 }
 
 @theme inline {
@@ -15,7 +15,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #110f0f;
   }
 }
 
@@ -24,6 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* input,h1,h2,h3,h4,h5,h6,textarea {
+  color: black;
+} */
 
 @layer utilities {
   @keyframes fadeIn {
@@ -43,6 +48,13 @@ body {
 /* Menyembunyikan beberapa kolom di perangkat mobile */
 /* Media Queries untuk perangkat mobile */
 @media (max-width: 768px) {
+
+    :root {
+    --background: #242222;
+    --foreground: #000; /* Ubah warna teks menjadi putih atau lebih terang */
+  }
+
+  
   .table-to-card {
     display: block; /* Menampilkan tampilan card */
   }

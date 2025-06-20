@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
-    FilePlus,
-    FolderOpen,
-    CreditCard,
+    Monitor,
+    FileText,
+    DollarSign,   // Add DollarSign icon for "Pembayaran"
 } from "lucide-react";
 
 export default function BottomNavbar() {
@@ -14,9 +14,9 @@ export default function BottomNavbar() {
 
     const menu = [
         { name: "Home", icon: LayoutDashboard, path: "/pembayaran/belum-lunas" },
-        { name: "Buat Tagihan", icon: FilePlus, path: "/pembayaran/tagihan" },
-        { name: "Data Tagihan", icon: FolderOpen, path: "/pembayaran/penghasilan" },
-        { name: "Pembayaran", icon: CreditCard, path: "/transaksi/bayar-tagihan" },
+        { name: "Monitoring", icon: Monitor, path: "/monitoring/servers" },
+        { name: "Data Tagihan", icon: FileText, path: "/pembayaran/penghasilan" }, // Use FileText for invoice
+        { name: "Pembayaran", icon: DollarSign, path: "/transaksi/bayar-tagihan" }, // Use DollarSign for payment
     ];
 
     return (
