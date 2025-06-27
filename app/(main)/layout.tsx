@@ -18,7 +18,7 @@ export default function DashboardLayout({
             <div className="flex-1 flex flex-col bg-gray-100">
                 <Navbar onHamburgerClick={() => setSidebarOpen(true)} />
                 <main className="flex-1 overflow-auto p-3">{children}</main>
-                <BottomNavbar /> {/* tampil hanya di layar kecil */}
+                {/* <BottomNavbar />  */}
             </div>
         </div>
     );
