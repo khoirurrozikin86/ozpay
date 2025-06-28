@@ -92,11 +92,12 @@ export default function ServerPage() {
     );
 
     const totalPages = Math.ceil(filteredServers.length / itemsPerPage);
-    const paginatedServers = filteredServers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    // const paginatedServers = filteredServers.slice(
+    //     (currentPage - 1) * itemsPerPage,
+    //     currentPage * itemsPerPage
+    // );
 
+    const paginatedServers = filteredServers;
 
 
     // Function to build a tree structure from flat router data
