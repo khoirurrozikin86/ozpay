@@ -23,8 +23,12 @@ jobs:
           script: |
             cd /var/www/html/ozpay
 
-            echo "🌀 Pulling latest code..."
-            git pull origin master
+           
+            
+            # Reset branch master ke versi remote
+              git fetch origin
+            git checkout master
+            git reset --hard origin/master
 
             echo "📦 Installing dependencies..."
             npm ci
