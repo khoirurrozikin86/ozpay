@@ -18,6 +18,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            git config --global --add safe.directory /var/www/html/ozpay
+
             cd /var/www/html/ozpay
 
             # Ambil update dari Git
