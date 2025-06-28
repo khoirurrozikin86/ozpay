@@ -44,3 +44,4 @@ jobs:
 
             # Restart pakai PM2
             pm2 reload ecosystem.config.js --env production
+              pm2 save
