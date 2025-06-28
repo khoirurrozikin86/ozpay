@@ -3,32 +3,14 @@ name: Deploy Next.js to VPS
 on:
   push:
     branches:
-      - master  # Atau "main" sesuai dengan branch default kamu
+      - master  # atau main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - name: Install Dependencies & Build
-        run: |
-          npm ci
-          npm run build
-
-      - name: Upload Build to VPS via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SS_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          source: ".next,public,package.json,ecosystem.config.js"
-          target: "/var/www/html/ozpay"
-
-      - name: SSH Restart PM2 App
+      - name: SSH Deploy & Restart PM2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SS_HOST }}
@@ -36,12 +18,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-           git config --global --add safe.directory /var/www/html/ozpay
             cd /var/www/html/ozpay
 
-            # Pastikan dependency sudah up-to-date
-            npm install --omit=dev
+            # Ambil update dari Git
+            git pull origin master
 
-            # Restart pakai PM2
-            pm2 reload ecosystem.config.js --env production
-              pm2 save
+            # Install dependencies
+            npm ci
+
+            # Build di VPS (Next.js)
+            npm run build
+
+            # Jalankan pakai PM2
+            pm2 start npm --name ozpay -- start
+            pm2 save
