@@ -97,6 +97,8 @@ export default function ServerPage() {
     //     currentPage * itemsPerPage
     // );
 
+    //tanpa pagination
+
     const paginatedServers = filteredServers;
 
 
