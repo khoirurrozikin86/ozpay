@@ -43,14 +43,14 @@ export default function Navbar({ onHamburgerClick }: NavbarProps) {
                 <Bell size={20} />
                 <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold transition hover:brightness-110"
+                    className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold transition hover:brightness-110 cursor-pointer"
                 >
                     {initial}
                 </button>
 
                 {/* DROPDOWN */}
                 <div
-                    className={`absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden transition-all duration-200 ease-out origin-top transform ${dropdownOpen
+                    className={` absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden transition-all duration-200 ease-out origin-top transform ${dropdownOpen
                         ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
                         : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                         }`}

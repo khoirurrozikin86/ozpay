@@ -127,6 +127,9 @@ export default function BayarTagihanPage() {
                                         <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full">
                                             {tagihan.pelanggan?.server?.lokasi || "-"}
                                         </span>
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-red-500 rounded-full">
+                                            {tagihan.pelanggan?.paket?.nama || "-"}
+                                        </span>
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
@@ -138,22 +141,21 @@ export default function BayarTagihanPage() {
                                     <span className="w-2/3">{tagihan.pelanggan?.nama || "-"}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">Bulan:</strong>
-                                    <span className="w-2/3">{tagihan.id_bulan}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">Tahun:</strong>
-                                    <span className="w-2/3">{tagihan.tahun}</span>
+                                    <strong className="w-1/3">Alamat:</strong>
+                                    <span className="w-2/3">{tagihan.pelanggan?.alamat || "-"}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">Jumlah:</strong>
-                                    <span className="w-2/3">Rp {Number(tagihan.jumlah_tagihan).toLocaleString("id-ID")}</span>
+                                    <strong className="w-1/3">Period:</strong>
+                                    <span className="w-2/3">{tagihan.id_bulan} {tagihan.tahun}</span>
                                 </div>
+
+
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">Nama Paket:</strong>
-                                    <span className="w-2/3">{tagihan.pelanggan?.paket?.nama || "-"}</span>
+                                    <strong className="w-1/3">Jumlah:</strong>
+                                    <span className="w-2/3"> Rp {Number(tagihan.jumlah_tagihan).toLocaleString("id-ID")}</span>
                                 </div>
+
 
                             </div>
 
