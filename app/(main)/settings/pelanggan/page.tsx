@@ -301,6 +301,39 @@ export default function PelangganPage() {
                 </div>
             </div>
 
+            {/* Versi mobile (card style) */}
+            <div className="sm:hidden space-y-4">
+                {paginated.map((p: any) => {
+                    const paketNama = pakets.find((paket) => paket.id === p.id_paket)?.nama || '-';
+                    const lokasiServer = servers.find((s) => s.id === p.id_server)?.lokasi || '-';
+
+                    return (
+                        <div key={p.id} className="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-2">
+                            <div className="font-semibold text-gray-900">{p.nama}</div>
+                            <div className="font-semibold text-gray-900 text-sm"> {paketNama} || {lokasiServer}</div>
+
+                            <div className="flex justify-end gap-4 pt-2 border-t border-gray-100 mt-2">
+                                <button
+                                    onClick={() => handleEdit(p)}
+                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setPelangganToDelete(p);
+                                        setShowDeleteModal(true);
+                                    }}
+                                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6">
