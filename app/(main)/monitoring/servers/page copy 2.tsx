@@ -26,7 +26,6 @@ export default function ServerPage() {
     const [selectedServerId, setSelectedServerId] = useState<number | null>(null);
     const [routerStatus, setRouterStatus] = useState<any[]>([]);
     const [loadingMonitoring, setLoadingMonitoring] = useState(false);
-    const [showMonitoringData, setShowMonitoringData] = useState(false); // Tambahkan state baru
 
     const load = async () => {
         setLoading(true);
@@ -42,17 +41,14 @@ export default function ServerPage() {
     const handleServerChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const serverId = Number(e.target.value);
         setSelectedServerId(serverId);
-        setRouterStatus([]); // Bersihkan data router sebelum memuat yang baru
-        setShowMonitoringData(false); // Sembunyikan data monitoring saat memulai loading
-
-        if (!serverId) return;
-
+        setRouterStatus([]);
         setLoadingMonitoring(true);
 
         try {
-            const data = await getMonitoring(serverId);
-            setRouterStatus(data.routerStatus || []);
-            setShowMonitoringData(true); // Tampilkan data monitoring setelah berhasil dimuat
+            if (serverId) {
+                const data = await getMonitoring(serverId);
+                setRouterStatus(data.routerStatus || []);
+            }
         } catch (error) {
             Swal.fire("Error", "Failed to fetch monitoring data", "error");
             setRouterStatus([]);
@@ -146,6 +142,9 @@ export default function ServerPage() {
                             }`}>
                             <div className="font-semibold">{node.name || 'Unnamed Router'}</div>
                             <div className="text-sm text-gray-600">IP: {node.ip}</div>
+                            {/* <div className="text-xs text-gray-500">
+                                Parent: {node.parent === node.ip ? "Root" : node.parent}
+                            </div> */}
                         </div>
                     </div>
 
@@ -165,7 +164,6 @@ export default function ServerPage() {
             </div>
         );
     };
-
     return (
         <div className="p-4">
             <div className="space-y-6">
@@ -205,21 +203,14 @@ export default function ServerPage() {
                                 IP: {servers.find(s => s.id === selectedServerId)?.ip}
                             </span>
                         </div>
-
-                        {loadingMonitoring ? (
-                            <div className="text-center p-6">
-                                <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
-                                <p className="mt-2 text-xl text-gray-600">Memuat data monitoring...</p>
-                            </div>
-                        ) : showMonitoringData && (
-                            <div className="space-y-4 overflow-auto max-h-[500px] p-4 bg-white rounded-lg shadow-md">
-                                {routerStatus.length > 0 ? (
-                                    renderRouterTree(routerStatus)
-                                ) : (
-                                    <p className="text-gray-500">Tidak ada data router yang tersedia</p>
-                                )}
-                            </div>
-                        )}
+                        <div className="space-y-4 overflow-auto max-h-[500px] p-4 bg-white rounded-lg shadow-md">
+                            {loadingMonitoring ? (
+                                <div className="text-center p-6">
+                                    <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
+                                    <p className="mt-2 text-xl text-gray-600">Memuat data monitoring...</p>
+                                </div>
+                            ) : renderRouterTree(routerStatus)}
+                        </div>
                     </div>
                 )}
             </div>
