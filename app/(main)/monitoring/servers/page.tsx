@@ -124,28 +124,32 @@ export default function ServerPage() {
             const hasChildren = node.children && node.children.length > 0;
 
             return (
-                <div key={node.ip} className="relative pl-6" style={{ marginLeft: `${level * 20}px` }}>
+                <div key={node.ip} className="relative" style={{ marginLeft: `${level * 8}px` }}>
                     {/* Vertical line */}
                     {level > 0 && (
-                        <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-300"></div>
+                        <div className="absolute left-0 top-0 bottom-0 w-[0.5px] bg-gray-200"></div>
                     )}
 
                     {/* Node content */}
-                    <div className={`flex items-start mb-2 ${level > 0 ? 'mt-2' : ''}`}>
+                    <div className={`flex items-center mb-0.5 ${level > 0 ? 'mt-0.5' : ''}`}>
                         {/* Horizontal line */}
                         {level > 0 && (
-                            <div className="absolute left-0 top-4 w-4 h-px bg-gray-300"></div>
+                            <div className="absolute left-0 top-2 w-2 h-[0.5px] bg-gray-200"></div>
                         )}
 
-                        {/* Status indicator */}
-                        <div className={`w-3 h-3 rounded-full mt-1 mr-2 flex-shrink-0 ${node.status === "green" ? "bg-green-500" : "bg-red-500"
+                        {/* Status indicator (tiny dot) */}
+                        <div className={`w-1.5 h-1.5 rounded-full mr-1 flex-shrink-0 ${node.status === "green" ? "bg-green-500" : "bg-red-500"
                             }`}></div>
 
-                        {/* Router info */}
-                        <div className={`p-2 rounded-lg ${node.status === "green" ? "bg-green-50" : "bg-red-50"
+                        {/* Compact router info */}
+                        <div className={`px-1.5 py-0.5 rounded-sm text-[11px] leading-tight ${node.status === "green" ? "bg-green-50" : "bg-red-50"
                             }`}>
-                            <div className="font-semibold">{node.name || 'Unnamed Router'}</div>
-                            <div className="text-sm text-gray-600">IP: {node.ip}</div>
+                            <div className="font-medium truncate max-w-[120px]">
+                                {node.name || node.ip}
+                            </div>
+                            <div className="text-[10px] text-gray-500 truncate max-w-[120px]">
+                                {node.name && node.ip}
+                            </div>
                         </div>
                     </div>
 
