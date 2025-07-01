@@ -92,11 +92,14 @@ export default function ServerPage() {
     );
 
     const totalPages = Math.ceil(filteredServers.length / itemsPerPage);
-    const paginatedServers = filteredServers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    // const paginatedServers = filteredServers.slice(
+    //     (currentPage - 1) * itemsPerPage,
+    //     currentPage * itemsPerPage
+    // );
 
+    //tanpa pagination
+
+    const paginatedServers = filteredServers;
 
 
     // Function to build a tree structure from flat router data
@@ -222,8 +225,8 @@ export default function ServerPage() {
 
                 {/* Display Router Monitoring Data */}
                 <div className="mt-6">
-                    <span className="text-xl font-bold text-gray-800 mb-4">Monitoring Data for Server : {selectedServerId} - {paginatedServers.find(s => s.id === selectedServerId)?.lokasi}</span>
-                    <div className="space-y-4">
+                    <span className="text-xl font-bold text-gray-800 mb-4">Server : {selectedServerId} - {paginatedServers.find(s => s.id === selectedServerId)?.lokasi}</span>
+                    <div className="space-y-4 overflow-auto max-h-[500px] p-4 bg-white rounded-lg shadow-md">
                         {loadingMonitoring ? (
                             <div className="text-center p-6">
                                 <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>

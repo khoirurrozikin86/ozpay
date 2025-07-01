@@ -9,14 +9,10 @@ export default function PenghasilanPage() {
     const [tanggal, setTanggal] = useState(today);
     const [result, setResult] = useState<{ data: any[]; summary: any } | null>(null);
     const [loading, setLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [searchTerm, setSearchTerm] = useState("");
-    const itemsPerPage = 10;
 
     const handleCheck = async () => {
         if (!tanggal) return;
         setLoading(true);
-        setCurrentPage(1); // Reset to first page when new data is loaded
         const res = await getPenghasilanByTanggal(tanggal);
         if (res.success) {
             setResult({
@@ -33,24 +29,12 @@ export default function PenghasilanPage() {
         handleCheck(); // otomatis ambil data saat halaman dibuka
     }, []);
 
-    // Filter data based on search term
-    const filteredData = result?.data?.filter((t) => {
-        const matchesSearch = t.pelanggan?.nama
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        return t.status === "lunas" && matchesSearch;
-    }) || [];
-
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const paginatedData = filteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const tagihanLunas = result?.data?.filter((t) => t.status === "lunas") || [];
 
     const handleExportExcel = () => {
-        if (!filteredData || filteredData.length === 0) return;
+        if (!result || !result.data) return;
 
-        const excelData = filteredData.map((t: any, i: number) => ({
+        const excelData = tagihanLunas.map((t: any, i: number) => ({
             No: i + 1,
             "No Tagihan": t.no_tagihan,
             "ID Pelanggan": t.id_pelanggan,
@@ -88,15 +72,12 @@ export default function PenghasilanPage() {
                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full sm:w-auto"
                     disabled={loading}
                 >
-                    {loading ? "Memuat..." : "Cek"}
+                    {loading ? "Cek Penghasilan" : "Cek Penghasilan"}
                 </button>
             </div>
 
-
             {/* Loading State */}
             {loading && <p>Sedang menghitung...</p>}
-
-
 
             {/* Result Data */}
             {result && (
@@ -109,36 +90,15 @@ export default function PenghasilanPage() {
                                 Rp {Number(result.summary.total_lunas || 0).toLocaleString("id-ID")}
                             </p>
                             <p className="text-sm text-blue-600 mt-1">
-                                Jumlah Pembayaran: {filteredData.length} transaksi
+                                Jumlah Pembayaran: {result.summary.count_lunas} transaksi
                             </p>
                         </div>
                     </div>
 
-
-
-                    {/* Search Section */}
-                    <div className=" mt-6">
-
-                        <input
-                            type="text"
-                            placeholder="Masukkan nama pelanggan..."
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="border px-3 py-2 rounded w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
                     {/* Tagihan Lunas Section */}
-                    {filteredData.length > 0 ? (
+                    {tagihanLunas.length > 0 && (
                         <>
-                            <div className="mt-8 flex justify-between items-center">
-                                <div className="text-sm text-gray-600">
-                                    {(currentPage - 1) * itemsPerPage + 1} -{' '}
-                                    {Math.min(currentPage * itemsPerPage, filteredData.length)} from {filteredData.length} data
-                                </div>
+                            <div className="mt-8 flex justify-end">
                                 <button
                                     onClick={handleExportExcel}
                                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 mb-3"
@@ -156,7 +116,6 @@ export default function PenghasilanPage() {
                                             <th className="border px-2 py-1">No</th>
                                             <th className="border px-2 py-1">No Tagihan</th>
                                             <th className="border px-2 py-1">Pelanggan</th>
-                                            <th className="border px-2 py-1">Alamat</th>
                                             <th className="border px-2 py-1">Jumlah</th>
                                             <th className="border px-2 py-1">Tanggal Bayar</th>
                                             <th className="border px-2 py-1">Penerima</th>
@@ -165,12 +124,11 @@ export default function PenghasilanPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {paginatedData.map((t, i) => (
+                                        {tagihanLunas.map((t, i) => (
                                             <tr key={t.id}>
-                                                <td className="border px-2 py-1">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                                <td className="border px-2 py-1">{i + 1}</td>
                                                 <td className="border px-2 py-1">{t.no_tagihan}</td>
                                                 <td className="border px-2 py-1">{t.pelanggan?.nama}</td>
-                                                <td className="border px-2 py-1">{t.pelanggan?.alamat}</td>
                                                 <td className="border px-2 py-1">
                                                     Rp {Number(t.jumlah_tagihan).toLocaleString("id-ID")}
                                                 </td>
@@ -178,7 +136,6 @@ export default function PenghasilanPage() {
                                                     {new Date(t.tgl_bayar).toLocaleDateString("id-ID")}
                                                 </td>
                                                 <td className="border px-2 py-1">{t.user?.name || "-"}</td>
-
                                                 <td className="border px-2 py-1">{t.id_bulan}</td>
                                                 <td className="border px-2 py-1">{t.tahun}</td>
                                             </tr>
@@ -189,13 +146,13 @@ export default function PenghasilanPage() {
 
                             {/* Mobile Card View (Hidden in Desktop) */}
                             <div className="sm:hidden">
-                                {paginatedData.map((t) => (
+                                {tagihanLunas.map((t) => (
                                     <div
                                         key={t.id}
                                         className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg p-6 mb-4 flex flex-col"
                                     >
                                         <h3 className="text-xl font-bold mb-2">{t.pelanggan?.nama}</h3>
-                                        <div className="text-sm text-gray-200 mb-2"> {t.id_bulan}/{t.tahun}- {t.pelanggan?.alamat}</div>
+                                        <div className="text-sm text-gray-200 mb-2">Bulan/Tahun: {t.id_bulan}/{t.tahun}</div>
                                         <div className="text-lg font-semibold mb-3">
                                             Rp {Number(t.jumlah_tagihan).toLocaleString("id-ID")}
                                         </div>
@@ -205,61 +162,15 @@ export default function PenghasilanPage() {
                                                 {new Date(t.tgl_bayar).toLocaleDateString("id-ID")}
                                             </span>
                                         </div>
-                                        <div className="text-sm">Penerima: {t.user?.name || "-"}</div>
+
                                     </div>
                                 ))}
                             </div>
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div className="flex justify-center mt-4">
-                                    <nav className="inline-flex rounded-md shadow">
-                                        <button
-                                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                            prev
-                                        </button>
-                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            let pageNum;
-                                            if (totalPages <= 5) {
-                                                pageNum = i + 1;
-                                            } else if (currentPage <= 3) {
-                                                pageNum = i + 1;
-                                            } else if (currentPage >= totalPages - 2) {
-                                                pageNum = totalPages - 4 + i;
-                                            } else {
-                                                pageNum = currentPage - 2 + i;
-                                            }
-                                            return (
-                                                <button
-                                                    key={pageNum}
-                                                    onClick={() => setCurrentPage(pageNum)}
-                                                    className={`px-3 py-1 border-t border-b border-gray-300 ${currentPage === pageNum ? 'bg-blue-50 text-blue-600 border-blue-500' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                                                >
-                                                    {pageNum}
-                                                </button>
-                                            );
-                                        })}
-                                        <button
-                                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                            next
-                                        </button>
-                                    </nav>
-                                </div>
-                            )}
                         </>
-                    ) : (
-                        <div className="mt-6 p-4 bg-yellow-50 text-yellow-700 rounded-lg">
-                            Tidak ada data yang sesuai dengan pencarian
-                        </div>
                     )}
                 </>
             )}
         </div>
+
     );
 }
