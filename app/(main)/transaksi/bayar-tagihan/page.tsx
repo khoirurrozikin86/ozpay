@@ -117,11 +117,11 @@ export default function BayarTagihanPage() {
                         >
                             <div className="space-y-1">
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">No Tagihan:</strong>
+                                    <strong className="w-1/3">No tag:</strong>
                                     <span className="w-2/3">{tagihan.no_tagihan}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b pb-2 border-b-black-300">
-                                    <strong className="w-1/3">Lokasi Server:</strong>
+                                    <strong className="w-1/3">Lokasi:</strong>
                                     {/* Badge for Location */}
                                     <span className="w-2/3">
                                         <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full">

@@ -220,18 +220,18 @@ export default function BuatTagihanPage() {
                         )}
 
                         <div className="flex justify-between items-center mt-4">
-                            <div className="text-sm">Halaman {currentPage} dari {totalPages}</div>
+                            <div className="text-sm"> {currentPage} dari {totalPages}</div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                                     className="px-3 py-1 border rounded disabled:opacity-50"
                                     disabled={currentPage === 1}
-                                >Sebelumnya</button>
+                                >prev</button>
                                 <button
                                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                                     className="px-3 py-1 border rounded disabled:opacity-50"
                                     disabled={currentPage === totalPages}
-                                >Berikutnya</button>
+                                >next</button>
                             </div>
                         </div>
                     </div>

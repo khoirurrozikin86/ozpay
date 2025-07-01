@@ -208,7 +208,7 @@ export default function TagihanLunasPage() {
                                 className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg p-6 mb-4 flex flex-col"
                             >
                                 <h3 className="text-xl font-bold mb-2">{t.pelanggan.nama}</h3>
-                                <div className="text-sm text-gray-200 mb-2">Bulan/Tahun: {t.id_bulan}/{t.tahun}</div>
+                                <div className="text-sm text-gray-200 mb-2">{t.id_bulan}/{t.tahun} - {t.pelanggan.alamat}</div>
                                 <div className="text-lg font-semibold mb-3">Rp {Number(t.jumlah_tagihan).toLocaleString("id-ID")}</div>
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">LUNAS</span>
@@ -229,21 +229,21 @@ export default function TagihanLunasPage() {
                     {/* Pagination */}
                     {filteredData.length > itemsPerPage && (
                         <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-                            <div>Menampilkan {paginatedData.length} dari {filteredData.length} entri</div>
+                            <div> {paginatedData.length} from {filteredData.length} data</div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                                     disabled={currentPage === 1}
                                     className="px-4 py-2 border rounded disabled:opacity-50"
                                 >
-                                    Sebelumnya
+                                    prev
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                                     disabled={currentPage === totalPages}
                                     className="px-4 py-2 border rounded disabled:opacity-50"
                                 >
-                                    Berikutnya
+                                    next
                                 </button>
                             </div>
                         </div>
