@@ -207,17 +207,23 @@ export default function ServerPage() {
                         </div>
 
                         {loadingMonitoring ? (
-                            <div className="text-center p-6">
+                            <div className="text-center p-6 bg-white rounded-lg shadow-md mx-2">
                                 <i className="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
                                 <p className="mt-2 text-xl text-gray-600">Memuat data monitoring...</p>
                             </div>
                         ) : showMonitoringData && (
-                            <div className="space-y-4 overflow-auto max-h-[500px] p-4 bg-white rounded-lg shadow-md">
-                                {routerStatus.length > 0 ? (
-                                    renderRouterTree(routerStatus)
-                                ) : (
-                                    <p className="text-gray-500">Tidak ada data router yang tersedia</p>
-                                )}
+                            <div className="w-full overflow-hidden">
+                                <div className="max-w-full overflow-x-auto">
+                                    <div className="min-w-max md:min-w-0 p-4 bg-white rounded-lg shadow-md mx-2">
+                                        {routerStatus.length > 0 ? (
+                                            <div className="w-full max-w-full">
+                                                {renderRouterTree(routerStatus)}
+                                            </div>
+                                        ) : (
+                                            <p className="text-gray-500">Tidak ada data router yang tersedia</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
