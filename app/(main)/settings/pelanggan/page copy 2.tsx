@@ -19,7 +19,7 @@ interface Pelanggan {
     id_server: string;
     ip_router: string;
     ip_parent_router: string;
-    remark1: string;
+    remark1: string; // Add remark1 field
 }
 
 interface Paket {
@@ -31,9 +31,6 @@ interface Server {
     id: number;
     lokasi: string;
 }
-
-type SortDirection = 'asc' | 'desc';
-type SortableField = keyof Omit<Pelanggan, 'id' | 'password' | 'remark1'>;
 
 export default function PelangganPage() {
     const [form, setForm] = useState({
@@ -47,7 +44,7 @@ export default function PelangganPage() {
         id_server: "",
         ip_router: "",
         ip_parent_router: "",
-        remark1: "1",
+        remark1: "1", // Default to "Tidak Aktif"
     });
     const [editId, setEditId] = useState<number | null>(null);
     const [showFormModal, setShowFormModal] = useState(false);
@@ -66,12 +63,6 @@ export default function PelangganPage() {
         form: false,
         delete: false
     });
-
-    // Sorting state
-    const [sortConfig, setSortConfig] = useState<{
-        key: SortableField;
-        direction: SortDirection;
-    } | null>(null);
 
     const load = async () => {
         setLoading(prev => ({ ...prev, table: true }));
@@ -96,74 +87,12 @@ export default function PelangganPage() {
         loadServer();
     }, []);
 
-    // Sorting function
-    const requestSort = (key: SortableField) => {
-        let direction: SortDirection = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
-    };
-
-    // Get sort icon
-    const getSortIcon = (key: SortableField) => {
-        if (!sortConfig || sortConfig.key !== key) {
-            return <span className="ml-1">↕️</span>;
-        }
-        return sortConfig.direction === 'asc' ?
-            <span className="ml-1">⬆️</span> :
-            <span className="ml-1">⬇️</span>;
-    };
-
-    // Apply sorting and filtering
-    const filteredAndSortedData = () => {
-        let filtered = [...pelanggans];
-
-        // Apply search filter
-        if (search) {
-            const searchLower = search.toLowerCase();
-            filtered = filtered.filter(p =>
-                Object.values(p).some(
-                    (val: any) =>
-                        val &&
-                        val.toString().toLowerCase().includes(searchLower)
-                )
-            );
-        }
-
-        // Apply sorting
-        if (sortConfig) {
-            filtered.sort((a, b) => {
-                // Handle numeric fields differently if needed
-                const aValue = a[sortConfig.key];
-                const bValue = b[sortConfig.key];
-
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'asc' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'asc' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-
-        return filtered;
-    };
-
-    const sortedAndFilteredData = filteredAndSortedData();
-    const totalPages = Math.ceil(sortedAndFilteredData.length / itemsPerPage);
-    const paginated = sortedAndFilteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
     const handleSubmit = async () => {
         try {
             if (editId) {
-                await updatePelanggan(editId, form);
+                await updatePelanggan(editId, form); // Update the selected pelanggan
             } else {
-                await createPelanggan(form);
+                await createPelanggan(form); // Create a new pelanggan
             }
             resetForm();
             setShowFormModal(false);
@@ -177,11 +106,13 @@ export default function PelangganPage() {
 
     const handleEdit = (data: any) => {
         const { remark1, remark2, remark3, created_at, updated_at, ...filtered } = data;
+
+        // Ensure remark1 is not null or undefined, fallback to "0" (Tidak Aktif) if it is
         setForm({ ...filtered, remark1: remark1 != null ? remark1.toString() : "0" });
+
         setEditId(data.id);
         setShowFormModal(true);
     };
-
     const handleExportExcel = () => {
         if (!pelanggans || pelanggans.length === 0) {
             Swal.fire("Info", "Tidak ada data pelanggan untuk diekspor.", "info");
@@ -212,6 +143,58 @@ export default function PelangganPage() {
         XLSX.writeFile(workbook, "Data_Pelanggan.xlsx");
     };
 
+    const renderFormField = (key: string, value: string) => {
+        if (key === 'id_paket') {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Pilih Paket</option>
+                    {pakets.map((p) => (
+                        <option key={p.id} value={p.id}>{p.nama}</option>
+                    ))}
+                </select>
+            );
+        }
+        if (key === 'id_server') {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Pilih Server</option>
+                    {servers.map((s) => (
+                        <option key={s.id} value={s.id}>{s.lokasi}</option>
+                    ))}
+                </select>
+            );
+        }
+        if (key === 'remark1') {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="1">Aktif</option>
+                    <option value="0">Tidak Aktif</option>
+                </select>
+            );
+        }
+        return (
+            <input
+                type={key === 'password' ? 'password' : 'text'}
+                value={value}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                className="border border-gray-300 p-2 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                placeholder={`Masukkan ${key.replace('_', ' ')}`}
+            />
+        );
+    };
+
     const resetForm = () => {
         setForm({
             id_pelanggan: "",
@@ -224,10 +207,21 @@ export default function PelangganPage() {
             id_server: "",
             ip_router: "",
             ip_parent_router: "",
-            remark1: "1",
+            remark1: "1", // Default to "Tidak Aktif"
         });
         setEditId(null);
     };
+
+    const filteredData = pelanggans.filter((p: any) =>
+        p.nama.toLowerCase().includes(search.toLowerCase()) ||
+        p.id_pelanggan.includes(search)
+    );
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginated = filteredData.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="p-4">
@@ -240,14 +234,14 @@ export default function PelangganPage() {
                             onClick={() => setShowFormModal(true)}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto transition-all ease-in-out duration-300 shadow-lg transform hover:scale-105"
                         >
-                            <i className="fas fa-user-plus"></i> Add
+                            <i className="fas fa-user-plus"></i> Tambah Pelanggan
                         </button>
 
                         <button
                             onClick={handleExportExcel}
                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto transition-all ease-in-out duration-300 shadow-lg transform hover:scale-105"
                         >
-                            <i className="fas fa-file-excel"></i> Export
+                            <i className="fas fa-file-export"></i> Export Excel
                         </button>
                     </div>
 
@@ -255,7 +249,7 @@ export default function PelangganPage() {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search semua kolom..."
+                        placeholder="Search"
                         className="w-full sm:w-64 px-4 py-3 border border-gray-300 bg-white rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ease-in-out duration-300"
                     />
                 </div>
@@ -265,33 +259,8 @@ export default function PelangganPage() {
                         <table className="table-fixed min-w-full table-pelanggan">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    {[
-                                        { key: 'id_pelanggan', label: 'ID' },
-                                        { key: 'nama', label: 'Nama' },
-                                        { key: 'no_hp', label: 'No HP' },
-                                        { key: 'email', label: 'Email' },
-                                        { key: 'id_paket', label: 'Paket' },
-                                        { key: 'id_server', label: 'Server' },
-                                        { key: 'ip_router', label: 'IP Router' },
-                                        { key: 'actions', label: 'Aksi' }
-                                    ].map((header) => (
-                                        <th
-                                            key={header.key}
-                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                            onClick={() => {
-                                                if (header.key !== 'actions' && header.key !== 'id_paket' && header.key !== 'id_server') {
-                                                    requestSort(header.key as SortableField);
-                                                }
-                                            }}
-                                            style={{
-                                                cursor: header.key !== 'actions' && header.key !== 'id_paket' && header.key !== 'id_server' ? 'pointer' : 'default'
-                                            }}
-                                        >
-                                            <div className="flex items-center">
-                                                {header.label}
-                                                {header.key !== 'actions' && header.key !== 'id_paket' && header.key !== 'id_server' && getSortIcon(header.key as SortableField)}
-                                            </div>
-                                        </th>
+                                    {['ID', 'Nama', 'No HP', 'Email', 'Paket', 'Server', 'IP Router', 'Aksi'].map((header) => (
+                                        <th key={header} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -302,10 +271,10 @@ export default function PelangganPage() {
                                             <td key={key} className="px-4 py-3 text-sm text-gray-900">{p[key]}</td>
                                         ))}
                                         <td className="px-4 py-3 text-sm text-gray-500">
-                                            {pakets.find((paket) => paket.id === Number(p.id_paket))?.nama || '-'}
+                                            {pakets.find((paket) => paket.id === p.id_paket)?.nama || '-'}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-500">
-                                            {servers.find((server) => server.id === Number(p.id_server))?.lokasi || '-'}
+                                            {servers.find((server) => server.id === p.id_server)?.lokasi || '-'}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-500">{p.ip_router || '-'}</td>
                                         <td className="px-4 py-3 text-right text-sm font-medium">
@@ -333,11 +302,11 @@ export default function PelangganPage() {
                     </div>
                 </div>
 
-                {/* Mobile version (unchanged) */}
+                {/* Versi mobile (card style) */}
                 <div className="sm:hidden space-y-4">
                     {paginated.map((p: any) => {
-                        const paketNama = pakets.find((paket) => paket.id === Number(p.id_paket))?.nama || '-';
-                        const lokasiServer = servers.find((s) => s.id === Number(p.id_server))?.lokasi || '-';
+                        const paketNama = pakets.find((paket) => paket.id === p.id_paket)?.nama || '-';
+                        const lokasiServer = servers.find((s) => s.id === p.id_server)?.lokasi || '-';
 
                         return (
                             <div key={p.id} className="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-2">
@@ -370,8 +339,8 @@ export default function PelangganPage() {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-6">
                         <div className="text-sm text-gray-500">
-                            {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredData.length)}-
-                            {Math.min(currentPage * itemsPerPage, sortedAndFilteredData.length)} dari {sortedAndFilteredData.length} data
+                            {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)}-
+                            {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
                         </div>
                         <div className="flex space-x-1">
                             <button
@@ -414,7 +383,7 @@ export default function PelangganPage() {
                     </div>
                 )}
 
-                {/* Form Modal (unchanged) */}
+                {/* Form Modal */}
                 {showFormModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-lg p-6 w-full max-w-sm sm:max-w-md space-y-4 animate-fadeIn max-h-[80vh] overflow-hidden scrollbar-hide flex flex-col">
@@ -497,7 +466,7 @@ export default function PelangganPage() {
                     </div>
                 )}
 
-                {/* Delete Confirmation Modal (unchanged) */}
+                {/* Delete Confirmation Modal */}
                 {showDeleteModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-4 animate-fadeIn">

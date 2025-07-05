@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTagihanByBulanTahun, updateTagihan } from "@/lib/api_tagihan";
 import Swal from "sweetalert2";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaSearch, FaFileExcel, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
 interface Tagihan {
@@ -19,14 +19,19 @@ interface Tagihan {
 }
 
 export default function DataTagihanPage() {
-    const [selectedBulan, setSelectedBulan] = useState("");
-    const [selectedTahun, setSelectedTahun] = useState("");
+    const currentDate = new Date();
+    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const currentYear = String(currentDate.getFullYear());
+
+    const [selectedBulan, setSelectedBulan] = useState(currentMonth);
+    const [selectedTahun, setSelectedTahun] = useState(currentYear);
     const [filtered, setFiltered] = useState<Tagihan[]>([]);
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [initialLoad, setInitialLoad] = useState(true);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -34,6 +39,13 @@ export default function DataTagihanPage() {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    useEffect(() => {
+        if (initialLoad && selectedBulan && selectedTahun) {
+            handleLihat();
+            setInitialLoad(false);
+        }
+    }, [selectedBulan, selectedTahun, initialLoad]);
 
     const tahunList = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
     const bulanList = [
@@ -58,9 +70,11 @@ export default function DataTagihanPage() {
             No: i + 1,
             "ID Pelanggan": t.id_pelanggan,
             Nama: t.nama,
-            "Jumlah Tagihan": t.jumlah_tagihan,
+            "No Tagihan": t.no_tagihan,
+            "Jumlah Tagihan": Number(t.jumlah_tagihan),
             Lokasi: t.lokasi || "-",
-            Status: t.status === "lunas" ? "Lunas" : "Belum Bayar"
+            Status: t.status === "lunas" ? "Lunas" : "Belum Bayar",
+            "No HP": t.no_hp
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -73,14 +87,19 @@ export default function DataTagihanPage() {
         if (!selectedBulan || !selectedTahun) return;
         setLoading(true);
         setCurrentPage(1);
-        const res = await getTagihanByBulanTahun(selectedBulan, selectedTahun);
-        if (res.success) {
-            setFiltered(res.data);
-            if (res.data.length === 0) {
-                Swal.fire("Kosong", "Tidak ada data tagihan untuk bulan dan tahun ini.", "info");
+        try {
+            const res = await getTagihanByBulanTahun(selectedBulan, selectedTahun);
+            if (res.success) {
+                setFiltered(res.data);
+                if (res.data.length === 0) {
+                    Swal.fire("Kosong", "Tidak ada data tagihan untuk bulan dan tahun ini.", "info");
+                }
             }
+        } catch (error) {
+            Swal.fire("Error", "Gagal memuat data tagihan.", "error");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleBayar = async (id: number) => {
@@ -94,21 +113,26 @@ export default function DataTagihanPage() {
         });
 
         if (!confirm.isConfirmed) return;
-        const res = await updateTagihan(id, { status: "lunas", tgl_bayar: new Date() });
-        if (res.success) {
-            Swal.fire("Berhasil", "Tagihan ditandai sebagai lunas.", "success");
-            handleLihat();
-        } else {
-            Swal.fire("Gagal", res.message || "Terjadi kesalahan.", "error");
+        try {
+            const res = await updateTagihan(id, { status: "lunas", tgl_bayar: new Date() });
+            if (res.success) {
+                Swal.fire("Berhasil", "Tagihan ditandai sebagai lunas.", "success");
+                handleLihat();
+            } else {
+                throw new Error(res.message);
+            }
+        } catch (error) {
+            Swal.fire("Gagal", error.message || "Terjadi kesalahan.", "error");
         }
     };
 
     const handleWhatsApp = (nama: string, tagihan: number, no_hp: string, bulan: string, tahun: string, no_tagihan: string, status: string, lokasi?: string) => {
+        const bulanName = bulanList.find(b => b.id_bulan === bulan)?.bulan || bulan;
         const nomor = no_hp.replace(/^0/, "62");
         const statusLabel = status === "lunas" ? "✅ *Lunas*" : "❗ *Belum Bayar*";
         const pesan = `Assalamu'alaikum, ${nama}.
 \n🧾 *No. Tagihan:* ${no_tagihan}
-📅 *Periode:* ${bulan} ${tahun}
+📅 *Periode:* ${bulanName} ${tahun}
 📍 *Lokasi :* ${lokasi || "-"}
 💰 *Jumlah Tagihan:* Rp${Number(tagihan).toLocaleString('id-ID')}
 📌 *Status:* ${statusLabel}
@@ -116,39 +140,48 @@ export default function DataTagihanPage() {
         window.open(`https://wa.me/${nomor}?text=${encodeURIComponent(pesan.trim())}`, "_blank");
     };
 
-    const filteredData = filtered.filter((t) =>
-        t.nama.toLowerCase().includes(search.toLowerCase()) ||
-        t.id_pelanggan.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredData = filtered.filter((t) => {
+        if (!search) return true;
+        const searchTerm = search.toLowerCase();
+        return (
+            t.nama.toLowerCase().includes(searchTerm) ||
+            t.id_pelanggan.toLowerCase().includes(searchTerm) ||
+            t.no_tagihan.toLowerCase().includes(searchTerm) ||
+            (t.lokasi && t.lokasi.toLowerCase().includes(searchTerm)) ||
+            t.no_hp.includes(search) ||
+            t.jumlah_tagihan.toString().includes(search) ||
+            t.status.toLowerCase().includes(searchTerm)
+        );
+    });
 
     const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     return (
-        <div className="p-1">
-            <div className="bg-white rounded-xl shadow p-3 mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end max-w-3xl mx-auto">
+        <div className="p-4">
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Data Tagihan Pelanggan</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
-                        <label className="text-sm block mb-1">Bulan</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
                         <select
                             value={selectedBulan}
                             onChange={(e) => setSelectedBulan(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <option value="">-- Pilih Bulan --</option>
                             {bulanList.map((b) => (
-                                <option key={b.id_bulan} value={b.id_bulan}>{b.id_bulan} - {b.bulan}</option>
+                                <option key={b.id_bulan} value={b.id_bulan}>{b.bulan}</option>
                             ))}
                         </select>
                     </div>
                     <div>
-                        <label className="text-sm block mb-1">Tahun</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
                         <select
                             value={selectedTahun}
                             onChange={(e) => setSelectedTahun(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <option value="">-- Pilih Tahun --</option>
                             {tahunList.map((t) => (
                                 <option key={t} value={t}>{t}</option>
                             ))}
@@ -157,82 +190,114 @@ export default function DataTagihanPage() {
                     <div>
                         <button
                             onClick={handleLihat}
-                            className="w-full bg-green-600 text-white px-4 py-2 rounded"
                             disabled={loading}
+                            className={`w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
-                            {loading ? "Memuat..." : "Lihat"}
+                            {loading ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Memuat...
+                                </>
+                            ) : 'Lihat Data'}
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            onClick={handleExportExcel}
+                            disabled={filtered.length === 0}
+                            className={`w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${filtered.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <FaFileExcel className="mr-2" /> Export Excel
                         </button>
                     </div>
                 </div>
             </div>
 
             {filtered.length > 0 && (
-                <div className="bg-white rounded-xl shadow p-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
-                        <h3 className="text-md font-semibold text-gray-700">
-                            Tagihan: {selectedBulan} - Tahun: {selectedTahun}
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            Tagihan: {bulanList.find(b => b.id_bulan === selectedBulan)?.bulan} {selectedTahun}
+                            <span className="ml-2 text-sm font-normal text-gray-500">
+                                ({filteredData.length} data ditemukan)
+                            </span>
                         </h3>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <button
-                                onClick={handleExportExcel}
-                                className="bg-blue-600 text-white px-4 py-2 rounded"
-                            >
-                                Export Excel
-                            </button>
+                        <div className="relative w-full md:w-64">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaSearch className="text-gray-400" />
+                            </div>
                             <input
                                 type="text"
-                                placeholder="Cari nama atau ID pelanggan"
+                                placeholder="Cari semua kolom..."
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="border border-gray-300 p-2 rounded w-full sm:w-64"
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             />
                         </div>
                     </div>
 
                     {/* Desktop Table View */}
                     {!isMobile && (
-                        <div className="w-full overflow-x-auto">
-                            <table className="w-full text-sm text-left text-gray-700 min-w-full">
-                                <thead className="bg-gray-100">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-2">No</th>
-                                        <th className="px-4 py-2">ID plg</th>
-                                        <th className="px-4 py-2">Nama</th>
-                                        <th className="px-4 py-2">Tagihan</th>
-                                        <th className="px-4 py-2">Lokasi</th>
-                                        <th className="px-4 py-2">Status</th>
-                                        <th className="px-4 py-2">Aksi</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Pelanggan</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No Tagihan</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tagihan</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="bg-white divide-y divide-gray-200">
                                     {paginatedData.map((t, i) => (
-                                        <tr key={t.id} className="bg-white hover:bg-gray-50 border-b">
-                                            <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                                            <td className="px-4 py-2 whitespace-nowrap">{t.id_pelanggan}</td>
-                                            <td className="px-4 py-2 truncate max-w-[160px]">{t.nama}</td>
-                                            <td className="px-4 py-2 whitespace-nowrap">
-                                                Rp {Number(t.jumlah_tagihan || 0).toLocaleString("id-ID")}
+                                        <tr key={t.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {(currentPage - 1) * itemsPerPage + i + 1}
                                             </td>
-                                            <td className="px-4 py-2">{t.lokasi || "-"}</td>
-                                            <td className="px-4 py-2">
-                                                <span className={`px-2 py-1 rounded text-white text-xs ${t.status === "lunas" ? "bg-green-500" : "bg-red-500"}`}>
-                                                    {t.status === "lunas" ? "LUNAS" : "BL"}
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {t.id_pelanggan}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">
+                                                {t.nama}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {t.no_tagihan}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                Rp{Number(t.jumlah_tagihan || 0).toLocaleString("id-ID")}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {t.lokasi || "-"}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${t.status === "lunas" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                    {t.status === "lunas" ? "LUNAS" : "BELUM LUNAS"}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2 whitespace-nowrap">
-                                                <div className="flex gap-2">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => handleBayar(t.id)}
-                                                        className="bg-sky-500 text-white px-2 py-1 rounded text-xs"
                                                         disabled={t.status === "lunas"}
+                                                        className={`inline-flex items-center px-3 py-1 border border-transparent text-xs rounded-md shadow-sm text-white ${t.status === "lunas" ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                                                     >
-                                                        ✔ Pay
+                                                        Tandai Lunas
                                                     </button>
                                                     <button
                                                         onClick={() => handleWhatsApp(t.nama, t.jumlah_tagihan, t.no_hp, selectedBulan, selectedTahun, t.no_tagihan, t.status, t.lokasi)}
-                                                        className="bg-green-100 text-green-600 px-2 py-1 rounded text-xs border border-green-300 flex items-center gap-1"
+                                                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                                     >
-                                                        <FaWhatsapp className="text-green-600" /> WA
+                                                        <FaWhatsapp className="mr-1" /> WhatsApp
                                                     </button>
                                                 </div>
                                             </td>
@@ -245,44 +310,54 @@ export default function DataTagihanPage() {
 
                     {/* Mobile Card View */}
                     {isMobile && (
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 gap-4 p-4">
                             {paginatedData.map((t, i) => (
-                                <div key={t.id} className="bg-white border rounded-lg p-3 shadow-sm">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{t.nama}</p>
-                                            <p className="text-xs text-gray-500">ID: {t.id_pelanggan}</p>
+                                <div key={t.id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                                    <div className="p-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="text-lg font-medium text-gray-900">{t.nama}</h4>
+                                                <p className="text-sm text-gray-500">ID: {t.id_pelanggan}</p>
+                                            </div>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${t.status === "lunas" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                {t.status === "lunas" ? "LUNAS" : "BELUM LUNAS"}
+                                            </span>
                                         </div>
-                                        <span className={`px-2 py-1 rounded text-white text-xs ${t.status === "lunas" ? "bg-green-500" : "bg-red-500"}`}>
-                                            {t.status === "lunas" ? "LUNAS" : "BL"}
-                                        </span>
-                                    </div>
 
-                                    <div className="mt-2 grid grid-cols-2 gap-1 text-sm">
-                                        <div>
-                                            <p className="text-gray-500">Tagihan</p>
-                                            <p>Rp {Number(t.jumlah_tagihan || 0).toLocaleString("id-ID")}</p>
+                                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <p className="text-gray-500">No Tagihan</p>
+                                                <p className="font-medium">{t.no_tagihan}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">Tagihan</p>
+                                                <p className="font-medium">Rp{Number(t.jumlah_tagihan || 0).toLocaleString("id-ID")}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">Lokasi</p>
+                                                <p className="font-medium">{t.lokasi || "-"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">No HP</p>
+                                                <p className="font-medium">{t.no_hp}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-gray-500">Lokasi</p>
-                                            <p className="truncate">{t.lokasi || "-"}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-3 flex justify-end gap-2">
-                                        <button
-                                            onClick={() => handleBayar(t.id)}
-                                            className="bg-sky-500 text-white px-3 py-1 rounded text-xs"
-                                            disabled={t.status === "lunas"}
-                                        >
-                                            ✔ Bayar
-                                        </button>
-                                        <button
-                                            onClick={() => handleWhatsApp(t.nama, t.jumlah_tagihan, t.no_hp, selectedBulan, selectedTahun, t.no_tagihan, t.status, t.lokasi)}
-                                            className="bg-green-100 text-green-600 px-3 py-1 rounded text-xs border border-green-300 flex items-center gap-1"
-                                        >
-                                            <FaWhatsapp className="text-green-600" /> WA
-                                        </button>
+                                        <div className="mt-4 flex space-x-2">
+                                            <button
+                                                onClick={() => handleBayar(t.id)}
+                                                disabled={t.status === "lunas"}
+                                                className={`flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm rounded-md shadow-sm text-white ${t.status === "lunas" ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                                            >
+                                                Tandai Lunas
+                                            </button>
+                                            <button
+                                                onClick={() => handleWhatsApp(t.nama, t.jumlah_tagihan, t.no_hp, selectedBulan, selectedTahun, t.no_tagihan, t.status, t.lokasi)}
+                                                className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                            >
+                                                <FaWhatsapp className="mr-2" /> WA
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -290,28 +365,72 @@ export default function DataTagihanPage() {
                     )}
 
                     {/* Pagination */}
-                    <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-2 text-sm text-gray-600">
-                        <div>
-                            {(currentPage - 1) * itemsPerPage + 1} -{' '}
-                            {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 border rounded disabled:opacity-50"
-                            >
-                                prev
-                            </button>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="px-3 py-1 border rounded disabled:opacity-50"
-                            >
-                                next
-                            </button>
+                    <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-gray-700">
+                                    Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> -{' '}
+                                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> dari{' '}
+                                    <span className="font-medium">{filteredData.length}</span> data
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="sr-only">Previous</span>
+                                        <FaChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageNum;
+                                        if (totalPages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i;
+                                        } else {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNum ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="sr-only">Next</span>
+                                        <FaChevronRight className="h-4 w-4" />
+                                    </button>
+                                </nav>
+                            </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {filtered.length === 0 && !loading && (
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">Tidak ada data tagihan</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        {selectedBulan && selectedTahun
+                            ? `Tidak ditemukan data tagihan untuk periode ${bulanList.find(b => b.id_bulan === selectedBulan)?.bulan} ${selectedTahun}`
+                            : "Pilih bulan dan tahun untuk melihat data tagihan"}
+                    </p>
                 </div>
             )}
         </div>
