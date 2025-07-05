@@ -122,7 +122,8 @@ export default function DataTagihanPage() {
                 throw new Error(res.message);
             }
         } catch (error) {
-            Swal.fire("Gagal", error.message || "Terjadi kesalahan.", "error");
+            const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan.";
+            Swal.fire("Gagal", errorMessage, "error");
         }
     };
 
