@@ -59,7 +59,7 @@ export default function BelumLunasPage() {
             { width: 15 }, // ID Pelanggan
             { width: 20 }, // Nama Pelanggan
             { width: 15 }, // Bulan/Tahun
-            { width: 15, style: { numFmt: "#,##0" } }, // Jumlah Tagihan (formatted as number)
+            { width: 15 }, // Jumlah Tagihan (formatted as number)
             { width: 10 }, // Status
             { width: 15 }, // Tanggal Bayar
             { width: 20 }, // Lokasi Server
