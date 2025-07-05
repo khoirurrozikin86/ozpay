@@ -137,7 +137,7 @@ export default function DataTagihanPage() {
 📍 *Lokasi :* ${lokasi || "-"}
 💰 *Jumlah Tagihan:* Rp${Number(tagihan).toLocaleString('id-ID')}
 📌 *Status:* ${statusLabel}
-\nSilakan melakukan pembayaran sebelum akhir bulan.\n\nTerima kasih 🙏`;
+\nSilakan jika status belum lunas, segera melakukan pembayaran sebelum akhir bulan.\n\nTerima kasih 🙏`;
         window.open(`https://wa.me/${nomor}?text=${encodeURIComponent(pesan.trim())}`, "_blank");
     };
 
