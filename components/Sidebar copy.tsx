@@ -1,6 +1,5 @@
 "use client";
 
-import Cookies from 'js-cookie';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +10,7 @@ import {
     ChevronDown,
     ChevronRight,
     Package,
+    User,
     CreditCard,
     Box,
     X,
@@ -23,7 +23,6 @@ import { memo, useState, useEffect } from "react";
 interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
-    role?: 'admin' | 'user';
 }
 
 interface MenuItem {
@@ -31,128 +30,53 @@ interface MenuItem {
     icon?: any;
     path?: string;
     children?: MenuItem[];
-    allowedRoles?: ('admin' | 'user')[];
 }
 
-
-
-
-
-
-const menuConfig: MenuItem[] = [
+const menu: MenuItem[] = [
+    { name: "Dashboard", icon: LayoutDashboard, path: "/" },
     {
-        name: "Dashboard",
-        icon: LayoutDashboard,
-        path: "/",
-        allowedRoles: ['admin', 'user']
-    },
-    {
-        name: "Settings",
-        icon: Settings,
-        allowedRoles: ['admin'],
-        children: [
+        name: "Settings", icon: Settings, children: [
             { name: "Paket", icon: Box, path: "/settings/paket" },
             { name: "Server", icon: ServerIcon, path: "/settings/server" },
             { name: "Pelanggan", icon: Users, path: "/settings/pelanggan" },
         ]
     },
     {
-        name: "Pembayaran",
-        icon: CreditCard,
-        allowedRoles: ['admin', 'user'],
-        children: [
-            { name: "Buat Tagihan", icon: Package, path: "/pembayaran/tagihan", allowedRoles: ['admin'] },
-            { name: "Data Tagihan", icon: Folder, path: "/pembayaran/data_tagihan", allowedRoles: ['admin'] },
-            { name: "Pembayaran Lunas", icon: CreditCardIcon, path: "/pembayaran/lunas", allowedRoles: ['admin'] },
-            { name: "Belum Lunas", icon: Wallet, path: "/pembayaran/belum-lunas", allowedRoles: ['admin', 'user'] },
-            { name: "Penghasilan", icon: Wallet, path: "/pembayaran/penghasilan", allowedRoles: ['admin', 'user'] },
+        name: "Pembayaran", icon: CreditCard, children: [
+            { name: "Buat Tagihan", icon: Package, path: "/pembayaran/tagihan" },
+            { name: "Data Tagihan", icon: Folder, path: "/pembayaran/data_tagihan" },
+            { name: "Pembayaran Lunas", icon: CreditCardIcon, path: "/pembayaran/lunas" },
+            { name: "Belum Lunas", icon: Wallet, path: "/pembayaran/belum-lunas" },
+            { name: "Penghasilan", icon: Wallet, path: "/pembayaran/penghasilan" },
         ]
     },
     {
-        name: "Transaksi",
-        icon: Wallet,
-        allowedRoles: ['admin', 'user'],
-        children: [
-            { name: "Bayar Tagihan", icon: CreditCardIcon, path: "/transaksi/bayar-tagihan", allowedRoles: ['admin', 'user'] }
+        name: "Transaksi", icon: Wallet, children: [
+            { name: "Bayar Tagihan", icon: CreditCardIcon, path: "/transaksi/bayar-tagihan" }
         ]
     },
     {
-        name: "Monitoring",
-        icon: ServerIcon,
-        allowedRoles: ['admin'],
-        children: [
+        name: "Monitoring", icon: ServerIcon, children: [
+            // { name: "Client", icon: User, path: "/monitoring/client" },
             { name: "Servers", icon: ServerIcon, path: "/monitoring/servers" }
         ]
     }
 ];
 
+
 function SidebarComponent({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-    const [role, setRole] = useState<'admin' | 'user'>('user');
-
-
-    useEffect(() => {
-        const cookieRole = Cookies.get('role') as 'admin' | 'user' | undefined;
-
-        // console.log('Role dari cookies:', cookieRole);
-
-        if (cookieRole) {
-            setRole(cookieRole);
-        } else {
-            console.warn('Role tidak ditemukan di cookies, menggunakan default "user"');
-        }
-    }, []);
-
-    // Debug: Log role yang diterima
-    console.log('Role saat ini:', role);
+    const [openSettings, setOpenSettings] = useState(false);
+    const [openPembayaran, setOpenPembayaran] = useState(false);
+    const [openTransaksi, setOpenTransaksi] = useState(false);
+    const [openMonitoring, setOpenMonitoring] = useState(false);  // New state for monitoring
 
     useEffect(() => {
-        const newOpenMenus: Record<string, boolean> = {};
-        menuConfig.forEach(item => {
-            if (item.children) {
-                const isActive = item.children.some(child =>
-                    pathname.startsWith(child.path || '')
-                );
-                newOpenMenus[item.name] = isActive;
-            }
-        });
-        setOpenMenus(newOpenMenus);
+        if (pathname.startsWith("/settings")) setOpenSettings(true);
+        if (pathname.startsWith("/pembayaran")) setOpenPembayaran(true);
+        if (pathname.startsWith("/transaksi")) setOpenTransaksi(true); // ✅ tambahkan ini
+        if (pathname.startsWith("/monitoring")) setOpenMonitoring(true); // Add monitoring path check
     }, [pathname]);
-
-    // Filter menu berdasarkan role
-    const filteredMenu = menuConfig
-        .filter(item => {
-            const isAllowed = !item.allowedRoles || item.allowedRoles.includes(role);
-            console.log(`Menu ${item.name} diizinkan untuk role ${role}:`, isAllowed);
-            return isAllowed;
-        })
-        .map(item => {
-            if (item.children) {
-                const filteredChildren = item.children.filter(child => {
-                    const isChildAllowed = !child.allowedRoles || child.allowedRoles.includes(role);
-                    console.log(`Submenu ${child.name} diizinkan untuk role ${role}:`, isChildAllowed);
-                    return isChildAllowed;
-                });
-                return { ...item, children: filteredChildren };
-            }
-            return item;
-        })
-        .filter(item => {
-            const hasValidChildren = !item.children || item.children.length > 0;
-            console.log(`Menu ${item.name} memiliki children valid:`, hasValidChildren);
-            return hasValidChildren;
-        });
-
-    // Debug: Log menu yang akan dirender
-    console.log('Menu yang akan dirender:', filteredMenu);
-
-    const toggleMenu = (menuName: string) => {
-        setOpenMenus(prev => ({
-            ...prev,
-            [menuName]: !prev[menuName]
-        }));
-    };
 
     return (
         <aside className={`fixed lg:static top-0 left-0 z-50 w-64 h-full 
@@ -160,7 +84,6 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
             font-sans tracking-wide transition-transform duration-300 ease-in-out 
             ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 shadow-xl rounded-r-xl`}>
 
-            {/* ... (bagian JSX lainnya tetap sama) ... */}
             <div className="flex items-center justify-between p-6">
                 <div className="text-2xl font-semibold text-white">OZ Pay</div>
                 <button className="lg:hidden text-gray-300 hover:text-white transition" onClick={onClose}>
@@ -170,27 +93,48 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
 
             <nav className="flex-1 overflow-y-auto max-h-screen space-y-1 px-2 text-sm scroll-smooth 
                 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-                {filteredMenu.map((item) => {
+                {menu.map((item) => {
                     const isDropdown = !!item.children;
-                    const isActive = item.children
-                        ? item.children.some(child => pathname === child.path)
-                        : pathname === item.path;
+                    const isParentSettings = item.name === "Settings";
+                    const isParentPembayaran = item.name === "Pembayaran";
+                    const isParentTransaksi = item.name === "Transaksi";
+                    const isParentMonitoring = item.name === "Monitoring"; // New check for monitoring
+                    const isOpenDropdown = isParentSettings
+                        ? openSettings
+                        : isParentPembayaran
+                            ? openPembayaran
+                            : isParentTransaksi
+                                ? openTransaksi
+                                : isParentMonitoring
+                                    ? openMonitoring
+                                    : false;
+
+                    const setOpen = isParentSettings
+                        ? setOpenSettings
+                        : isParentPembayaran
+                            ? setOpenPembayaran
+                            : isParentTransaksi
+                                ? setOpenTransaksi
+                                : isParentMonitoring
+                                    ? setOpenMonitoring
+                                    : () => { };
 
                     if (isDropdown && item.children) {
+                        const isParentActive = item.children?.some((child) => pathname.startsWith(child.path || ""));
                         return (
                             <div key={item.name}>
                                 <button
-                                    onClick={() => toggleMenu(item.name)}
+                                    onClick={() => setOpen(!isOpenDropdown)}
                                     className={`w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-700 transition-all duration-200 
-                                    ${isActive ? "bg-slate-700 text-blue-400 font-semibold" : "text-slate-200"}`}
+                                    ${isParentActive ? "bg-slate-700 text-blue-400 font-semibold" : "text-slate-200"}`}
                                 >
                                     <div className="flex items-center gap-3">
                                         {item.icon && <item.icon size={20} />}
                                         <span>{item.name}</span>
                                     </div>
-                                    {openMenus[item.name] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                    {isOpenDropdown ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                 </button>
-                                {openMenus[item.name] && (
+                                {isOpenDropdown && (
                                     <div className="ml-6 mt-1 space-y-1">
                                         {item.children.map((child) => {
                                             const isChildActive = pathname === child.path;
@@ -212,6 +156,7 @@ function SidebarComponent({ isOpen, onClose }: SidebarProps) {
                         );
                     }
 
+                    const isActive = pathname === item.path;
                     return (
                         <Link
                             key={item.name}

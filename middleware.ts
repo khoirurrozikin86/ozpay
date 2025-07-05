@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
     const token = request.cookies.get("token")?.value;
+    const role = request.cookies.get("role")?.value; // Asumsi role disimpan di cookie
 
     const { pathname } = request.nextUrl;
 
@@ -18,6 +19,23 @@ export function middleware(request: NextRequest) {
 
     // Jika sudah login dan akses login → redirect ke dashboard
     if (token && pathname === "/login") {
+        return NextResponse.redirect(new URL("/", request.url));
+    }
+
+
+    // Daftar route yang boleh diakses oleh user dengan role 'user'
+    const userAllowedRoutes = [
+        "/",
+        "/pembayaran/belum-lunas",
+        "/pembayaran/penghasilan",
+        "/transaksi/bayar-tagihan"
+    ];
+
+    // Jika role user mencoba akses route yang tidak diizinkan
+    if (role === "user" && !userAllowedRoutes.some(route => {
+        // Handle exact match or startsWith for nested routes
+        return pathname === route || pathname.startsWith(route + "/");
+    })) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 

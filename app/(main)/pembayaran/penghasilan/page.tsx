@@ -33,13 +33,31 @@ export default function PenghasilanPage() {
         handleCheck(); // otomatis ambil data saat halaman dibuka
     }, []);
 
-    // Filter data based on search term
+    // Filter data based on search term across all columns
     const filteredData = result?.data?.filter((t) => {
-        const matchesSearch = t.pelanggan?.nama
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        return t.status === "lunas" && matchesSearch;
+        if (t.status !== "lunas") return false;
+
+        const searchLower = searchTerm.toLowerCase();
+
+        // Check all relevant fields for search term
+        const matchesSearch =
+            (t.no_tagihan?.toLowerCase().includes(searchLower)) ||
+            (t.pelanggan?.nama?.toLowerCase().includes(searchLower)) ||
+            (t.pelanggan?.alamat?.toLowerCase().includes(searchLower)) ||
+            (t.jumlah_tagihan?.toString().includes(searchTerm)) ||
+            (t.tgl_bayar?.toLowerCase().includes(searchLower)) ||
+            (t.user?.name?.toLowerCase().includes(searchLower)) ||
+            (t.id_bulan?.toString().includes(searchTerm)) ||
+            (t.tahun?.toString().includes(searchTerm));
+
+        return matchesSearch;
     }) || [];
+
+    // Calculate dynamic summary based on filtered data
+    const dynamicSummary = {
+        total_lunas: filteredData.reduce((sum, item) => sum + (Number(item.jumlah_tagihan) || 0), 0),
+        total_transaksi: filteredData.length
+    };
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const paginatedData = filteredData.slice(
@@ -55,7 +73,7 @@ export default function PenghasilanPage() {
             "No Tagihan": t.no_tagihan,
             "ID Pelanggan": t.id_pelanggan,
             "Nama Pelanggan": t.pelanggan?.nama || "-",
-            "Jumlah Tagihan": t.jumlah_tagihan,
+            "Jumlah Tagihan": Number(t.jumlah_tagihan) || 0, // Konversi ke number
             "Tanggal Bayar": t.tgl_bayar
                 ? new Date(t.tgl_bayar).toLocaleDateString("id-ID")
                 : "-",
@@ -65,6 +83,19 @@ export default function PenghasilanPage() {
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+        // Opsional: Format kolom jumlah sebagai currency
+        if (worksheet['!ref']) {
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let i = range.s.r + 1; i <= range.e.r; ++i) {
+                const cellAddress = XLSX.utils.encode_cell({ r: i, c: 4 }); // Kolom E (indeks 4) adalah Jumlah Tagihan
+                if (worksheet[cellAddress]) {
+                    worksheet[cellAddress].t = 'n'; // Set tipe cell ke number
+                    worksheet[cellAddress].z = '#,##0.00'; // Format angka dengan separator ribuan
+                }
+            }
+        }
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Tagihan Lunas");
 
@@ -92,11 +123,8 @@ export default function PenghasilanPage() {
                 </button>
             </div>
 
-
             {/* Loading State */}
             {loading && <p>Sedang menghitung...</p>}
-
-
 
             {/* Result Data */}
             {result && (
@@ -106,22 +134,19 @@ export default function PenghasilanPage() {
                         <div className="bg-blue-100 p-4 rounded-lg shadow">
                             <h2 className="text-lg font-semibold text-blue-800 mb-2">Total Tertagih (Lunas)</h2>
                             <p className="text-2xl font-bold text-blue-700">
-                                Rp {Number(result.summary.total_lunas || 0).toLocaleString("id-ID")}
+                                Rp {Number(dynamicSummary.total_lunas || 0).toLocaleString("id-ID")}
                             </p>
                             <p className="text-sm text-blue-600 mt-1">
-                                Jumlah Pembayaran: {filteredData.length} transaksi
+                                Jumlah Pembayaran: {dynamicSummary.total_transaksi} transaksi
                             </p>
                         </div>
                     </div>
 
-
-
                     {/* Search Section */}
-                    <div className=" mt-6">
-
+                    <div className="mt-6">
                         <input
                             type="text"
-                            placeholder="Masukkan nama pelanggan..."
+                            placeholder="Cari berdasarkan no tagihan, nama, alamat, jumlah, penerima, dll..."
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
@@ -137,7 +162,7 @@ export default function PenghasilanPage() {
                             <div className="mt-8 flex justify-between items-center">
                                 <div className="text-sm text-gray-600">
                                     {(currentPage - 1) * itemsPerPage + 1} -{' '}
-                                    {Math.min(currentPage * itemsPerPage, filteredData.length)} from {filteredData.length} data
+                                    {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
                                 </div>
                                 <button
                                     onClick={handleExportExcel}
@@ -178,7 +203,6 @@ export default function PenghasilanPage() {
                                                     {new Date(t.tgl_bayar).toLocaleDateString("id-ID")}
                                                 </td>
                                                 <td className="border px-2 py-1">{t.user?.name || "-"}</td>
-
                                                 <td className="border px-2 py-1">{t.id_bulan}</td>
                                                 <td className="border px-2 py-1">{t.tahun}</td>
                                             </tr>

@@ -10,25 +10,18 @@ export default function BelumLunasPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+
+
     useEffect(() => {
         getTagihanBelumLunas().then((res) => {
             if (res.success) setData(res.data);
         });
     }, []);
 
-    const filtered = data.filter((t) => {
-        const searchTerm = search.toLowerCase();
-        return (
-            t.pelanggan?.nama?.toLowerCase().includes(searchTerm) ||
-            t.id_pelanggan?.toLowerCase().includes(searchTerm) ||
-            `${t.id_bulan}/${t.tahun}`.includes(searchTerm) ||
-            t.jumlah_tagihan?.toString().includes(searchTerm) ||
-            t.status?.toLowerCase().includes(searchTerm) ||
-            (t.tgl_bayar && new Date(t.tgl_bayar).toLocaleDateString("id-ID").includes(searchTerm)) ||
-            t.pelanggan?.server?.lokasi?.toLowerCase().includes(searchTerm) ||
-            t.user?.nama?.toLowerCase().includes(searchTerm)
-        );
-    });
+    const filtered = data.filter((t) =>
+        t.pelanggan?.nama?.toLowerCase().includes(search.toLowerCase()) ||
+        t.id_pelanggan?.toLowerCase().includes(search.toLowerCase())
+    );
 
     const totalCount = filtered.length;
     const totalNominal = filtered.reduce((sum, t) => sum + Number(t.jumlah_tagihan || 0), 0);
@@ -42,7 +35,7 @@ export default function BelumLunasPage() {
             "ID Pelanggan": t.id_pelanggan,
             "Nama Pelanggan": t.pelanggan?.nama || "-",
             "Bulan/Tahun": `${t.id_bulan}/${t.tahun}`,
-            "Jumlah Tagihan": Number(t.jumlah_tagihan) || 0, // Ensure this is exported as number
+            "Jumlah Tagihan": t.jumlah_tagihan,
             Status: t.status,
             "Tanggal Bayar": t.tgl_bayar
                 ? new Date(t.tgl_bayar).toLocaleDateString("id-ID")
@@ -52,26 +45,11 @@ export default function BelumLunasPage() {
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
-
-        // Set column format for "Jumlah Tagihan" to number
-        worksheet["!cols"] = [
-            { width: 5 },  // No
-            { width: 15 }, // ID Pelanggan
-            { width: 20 }, // Nama Pelanggan
-            { width: 15 }, // Bulan/Tahun
-            { width: 15, style: { numFmt: "#,##0" } }, // Jumlah Tagihan (formatted as number)
-            { width: 10 }, // Status
-            { width: 15 }, // Tanggal Bayar
-            { width: 20 }, // Lokasi Server
-            { width: 15 }  // Penerima
-        ];
-
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Belum Lunas");
         XLSX.writeFile(workbook, "Tagihan_Belum_Lunas.xlsx");
     };
 
-    // ... rest of your component remains the same ...
     return (
         <div className="p-6 bg-white rounded-lg shadow-md">
             {/* Header Section */}
@@ -80,7 +58,7 @@ export default function BelumLunasPage() {
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
                     <input
                         type="text"
-                        placeholder="Cari semua kolom..."
+                        placeholder="Cari nama atau ID pelanggan..."
                         className="border border-gray-200 dark:border-gray-600 p-2 rounded text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
                         value={search}
                         onChange={(e) => {
@@ -194,5 +172,6 @@ export default function BelumLunasPage() {
                 </div>
             )}
         </div>
+
     );
 }
