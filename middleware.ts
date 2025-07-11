@@ -26,9 +26,12 @@ export function middleware(request: NextRequest) {
     // Daftar route yang boleh diakses oleh user dengan role 'user'
     const userAllowedRoutes = [
         "/",
+         "/pembayaran/data-tagihan",
         "/pembayaran/belum-lunas",
+        "/pembayaran/lunas",
         "/pembayaran/penghasilan",
-        "/transaksi/bayar-tagihan"
+        "/transaksi/bayar-tagihan",
+         "/monitoring/servers"
     ];
 
     // Jika role user mencoba akses route yang tidak diizinkan
