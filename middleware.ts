@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
         "/pembayaran/lunas",
         "/pembayaran/penghasilan",
         "/transaksi/bayar-tagihan",
-         "/monitoring/servers"
+         "/monitoring/servers",
     ];
 
     // Jika role user mencoba akses route yang tidak diizinkan
