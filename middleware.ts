@@ -35,10 +35,13 @@ export function middleware(request: NextRequest) {
     ];
 
     // Jika role user mencoba akses route yang tidak diizinkan
-    if (role === "user" && !userAllowedRoutes.some(route => {
-        // Handle exact match or startsWith for nested routes
-        return pathname === route || pathname.startsWith(route + "/");
-    })) {
+    // if (role === "user" && !userAllowedRoutes.some(route => {
+    //     return pathname === route || pathname.startsWith(route + "/");
+    // })) {
+    //     return NextResponse.redirect(new URL("/", request.url));
+    // }
+
+    if (role === "user" && !userAllowedRoutes.some(route => pathname.startsWith(route))) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 
